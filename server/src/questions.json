@@ -1,0 +1,74 @@
+[
+  {
+    "question": "What is the capital of France?",
+    "options": ["Berlin", "Madrid", "Paris"],
+    "correctIndex": 2,
+    "explanation": "Paris is the capital of France."
+  },
+  {
+    "question": "What is the capital of Poland?",
+    "options": ["Warsaw", "Gdansk", "Sopot"],
+    "correctIndex": 0,
+    "explanation": "Warsaw is the capital of Poland."
+  },
+  {
+    "question": "What is the capital of Japan?",
+    "options": ["Tokyo", "Osaka", "Kyoto"],
+    "correctIndex": 0,
+    "explanation": "Tokyo is the capital of Japan."
+  },
+  {
+    "question": "What is the capital of Canada?",
+    "options": ["Toronto", "Ottawa", "Vancouver"],
+    "correctIndex": 1,
+    "explanation": "Ottawa is the capital of Canada."
+  },
+  {
+    "question": "What is the capital of Australia?",
+    "options": ["Sydney", "Melbourne", "Canberra"],
+    "correctIndex": 2,
+    "explanation": "Canberra is the capital of Australia."
+  },
+  {
+    "question": "What is the capital of Brazil?",
+    "options": ["Rio de Janeiro", "Brasília", "São Paulo"],
+    "correctIndex": 1,
+    "explanation": "Brasília is the capital of Brazil."
+  },
+  {
+    "question": "What is the capital of India?",
+    "options": ["Mumbai", "New Delhi", "Bangalore"],
+    "correctIndex": 1,
+    "explanation": "New Delhi is the capital of India."
+  },
+  {
+    "question": "What is the capital of Russia?",
+    "options": ["Saint Petersburg", "Moscow", "Novosibirsk"],
+    "correctIndex": 1,
+    "explanation": "Moscow is the capital of Russia."
+  },
+  {
+    "question": "What is the capital of Italy?",
+    "options": ["Venice", "Rome", "Florence"],
+    "correctIndex": 1,
+    "explanation": "Rome is the capital of Italy."
+  },
+  {
+    "question": "What is the capital of Egypt?",
+    "options": ["Cairo", "Alexandria", "Giza"],
+    "correctIndex": 0,
+    "explanation": "Cairo is the capital of Egypt."
+  },
+  {
+    "question": "What is the capital of South Africa?",
+    "options": ["Johannesburg", "Pretoria", "Cape Town"],
+    "correctIndex": 1,
+    "explanation": "Pretoria is one of the capitals of South Africa."
+  },
+  {
+    "question": "What is the capital of Argentina?",
+    "options": ["Buenos Aires", "Córdoba", "Rosario"],
+    "correctIndex": 0,
+    "explanation": "Buenos Aires is the capital of Argentina."
+  }
+]

@@ -1,26 +1,233 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WebSocket Test</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster: Fun Quizzes for Your Spare Time!</title>
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        .header {
+            background-image: url('https://source.unsplash.com/1600x400/?quiz,fun');
+            background-size: cover;
+            background-position: center;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .header h1 {
+            color: white;
+            text-shadow: 2px 2px 4px #000000;
+            font-size: 3em;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #ff69b4;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #ff1493;
+        }
+        input {
+            padding: 10px;
+            margin: 5px 0;
+            border: 2px solid #ff69b4;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .hidden {
+            display: none;
+        }
+        #player-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        #player-list li {
+            background-color: #ffe4e1;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #options button {
+            margin: 5px;
+            background-color: #4169e1;
+        }
+        #options button:hover {
+            background-color: #1e90ff;
+        }
+        #leaderboard {
+            background-color: #e6e6fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #answer-reveal {
+            background-color: #98fb98;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-<button onclick="sendMessage()">Send Message</button>
-<div id="response"></div>
+<div class="header">
+    <h1>QuizMaster: Fun for Your Spare Time!</h1>
+</div>
+<div class="container">
+    <div id="room-creation">
+        <h2>Join the Fun!</h2>
+        <button onclick="createRoom()">Create a Quirky Room</button>
+        <input id="room-id" placeholder="Enter Quirky Room ID">
+        <input id="player-name" placeholder="Your Funky Nickname">
+        <button onclick="joinRoom()">Join the Party!</button>
+    </div>
+    <div id="waiting-room" class="hidden">
+        <h2>Waiting Room</h2>
+        <h3 id="room-id-display"></h3>
+        <ul id="player-list"></ul>
+        <button onclick="playerReady()">I'm Ready to Rock!</button>
+    </div>
+    <div id="game" class="hidden">
+        <h2 id="question"></h2>
+        <div id="options"></div>
+        <div id="answer-status"></div>
+        <div id="answer-reveal" class="hidden"></div>
+        <div id="leaderboard"></div>
+    </div>
+    <div id="results" class="hidden">
+        <h2>Game Results</h2>
+        <div id="final-results"></div>
+        <button onclick="startNewGame()">Start Another Crazy Game!</button>
+    </div>
+</div>
 
 <script>
     const socket = io('http://localhost:3000');
+    let currentRoom = '';
+    let currentPlayer = '';
 
-    socket.on('connect', () => {
-        console.log('Connected to server');
+    function createRoom() {
+        socket.emit('createRoom', (roomId) => {
+            currentRoom = roomId;
+            document.getElementById('room-id').value = roomId;
+        });
+    }
+
+    function joinRoom() {
+        const roomId = document.getElementById('room-id').value;
+        const playerName = document.getElementById('player-name').value;
+        currentPlayer = playerName;
+        socket.emit('joinRoom', { roomId, playerName });
+        currentRoom = roomId;
+        document.getElementById('room-creation').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
+    }
+
+    function playerReady() {
+        socket.emit('playerReady', currentRoom);
+    }
+
+    function submitAnswer(index) {
+        socket.emit('submitAnswer', { roomId: currentRoom, answerIndex: index });
+        document.getElementById('answer-status').textContent = 'Answer submitted. Waiting for other players...';
+        document.getElementById('options').innerHTML = '';
+    }
+
+    function startNewGame() {
+        socket.emit('startNewGame', currentRoom);
+    }
+
+    socket.on('playerJoined', (data) => {
+        updatePlayerList(data.players);
+        document.getElementById('room-id-display').textContent = `Quirky Room: ${data.roomId}`;
     });
 
-    socket.on('response', (data) => {
-        document.getElementById('response').innerText = data;
+    socket.on('playerReady', (players) => {
+        updatePlayerList(players);
     });
 
-    function sendMessage() {
-        socket.emit('message', 'Hello Server');
+    socket.on('newQuestion', (data) => {
+        document.getElementById('waiting-room').classList.add('hidden');
+        document.getElementById('game').classList.remove('hidden');
+        document.getElementById('question').textContent = data.question;
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = data.options.map((option, index) =>
+            `<button onclick="submitAnswer(${index})">${option}</button>`
+        ).join('');
+        document.getElementById('answer-status').textContent = '';
+        document.getElementById('answer-reveal').classList.add('hidden');
+    });
+
+    socket.on('answerRevealed', (data) => {
+        const answerRevealDiv = document.getElementById('answer-reveal');
+        answerRevealDiv.innerHTML = `
+                <h3>Correct Answer: ${data.options[data.correctIndex]}</h3>
+                <p>Explanation: ${data.explanation}</p>
+            `;
+        answerRevealDiv.classList.remove('hidden');
+        updateLeaderboard(data.leaderboard);
+    });
+
+    socket.on('gameEnded', (data) => {
+        document.getElementById('game').classList.add('hidden');
+        document.getElementById('results').classList.remove('hidden');
+        const resultsDiv = document.getElementById('final-results');
+        resultsDiv.innerHTML = data.results.map(q =>
+            `<div>
+                    <h4>${q.question}</h4>
+                    <p>Correct Answer: ${q.options[q.correctIndex]}</p>
+                    <p>Explanation: ${q.explanation}</p>
+                </div>`
+        ).join('');
+        updateLeaderboard(data.leaderboard);
+    });
+
+    socket.on('newGameStarted', (players) => {
+        document.getElementById('results').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
+        updatePlayerList(players);
+    });
+
+    function updatePlayerList(players) {
+        const playerList = document.getElementById('player-list');
+        playerList.innerHTML = players.map(p =>
+            `<li>${p.name} ${p.ready ? '(Ready to Rock!)' : ''}</li>`
+        ).join('');
+    }
+
+    function updateLeaderboard(leaderboard) {
+        const leaderboardDiv = document.getElementById('leaderboard');
+        const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
+        leaderboardDiv.innerHTML = '<h3>Leaderboard of Legends</h3>' +
+            sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} points</p>`).join('');
     }
 </script>
 </body>
