@@ -83,7 +83,7 @@
         #options button:hover {
             background-color: #1e90ff;
         }
-        #leaderboard {
+        #leaderboard, #final-leaderboard {
             background-color: #e6e6fa;
             padding: 10px;
             border-radius: 5px;
@@ -94,6 +94,18 @@
             padding: 10px;
             border-radius: 5px;
             margin-top: 20px;
+        }
+        #wrong-answer {
+            background-color: #ff6347;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .winner {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #FF6200FF;
         }
     </style>
 </head>
@@ -119,11 +131,13 @@
         <h2 id="question"></h2>
         <div id="options"></div>
         <div id="answer-status"></div>
+        <div id="wrong-answer" class="hidden"></div>
         <div id="answer-reveal" class="hidden"></div>
         <div id="leaderboard"></div>
     </div>
     <div id="results" class="hidden">
         <h2>Game Results</h2>
+        <div id="final-leaderboard"></div>
         <div id="final-results"></div>
         <button onclick="startNewGame()">Start Another Crazy Game!</button>
     </div>
@@ -133,6 +147,7 @@
     const socket = io('http://localhost:3000');
     let currentRoom = '';
     let currentPlayer = '';
+    let lastSubmittedAnswer = null;
 
     function createRoom() {
         socket.emit('createRoom', (roomId) => {
@@ -156,6 +171,7 @@
     }
 
     function submitAnswer(index) {
+        lastSubmittedAnswer = index;
         socket.emit('submitAnswer', { roomId: currentRoom, answerIndex: index });
         document.getElementById('answer-status').textContent = 'Answer submitted. Waiting for other players...';
         document.getElementById('options').innerHTML = '';
@@ -184,6 +200,8 @@
         ).join('');
         document.getElementById('answer-status').textContent = '';
         document.getElementById('answer-reveal').classList.add('hidden');
+        document.getElementById('wrong-answer').classList.add('hidden');
+        lastSubmittedAnswer = null;
     });
 
     socket.on('answerRevealed', (data) => {
@@ -193,12 +211,28 @@
                 <p>Explanation: ${data.explanation}</p>
             `;
         answerRevealDiv.classList.remove('hidden');
+
+        if (lastSubmittedAnswer !== null && lastSubmittedAnswer !== data.correctIndex) {
+            const wrongAnswerDiv = document.getElementById('wrong-answer');
+            const funnyMessages = [
+                "Oopsie-daisy! That answer was as wrong as putting pineapple on pizza!",
+                "Holy guacamole! Your answer was so off, it's probably vacationing in Narnia!",
+                "Yikes! That answer was more off-target than a blindfolded archer!",
+                "Oh snap! Your answer just took a wrong turn at Albuquerque!",
+                "Great Scott! Your answer was more mixed up than a chameleon in a bag of Skittles!"
+            ];
+            const randomMessage = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+            wrongAnswerDiv.textContent = randomMessage;
+            wrongAnswerDiv.classList.remove('hidden');
+        }
+
         updateLeaderboard(data.leaderboard);
     });
 
     socket.on('gameEnded', (data) => {
         document.getElementById('game').classList.add('hidden');
         document.getElementById('results').classList.remove('hidden');
+        updateFinalLeaderboard(data.leaderboard);
         const resultsDiv = document.getElementById('final-results');
         resultsDiv.innerHTML = data.results.map(q =>
             `<div>
@@ -207,7 +241,6 @@
                     <p>Explanation: ${q.explanation}</p>
                 </div>`
         ).join('');
-        updateLeaderboard(data.leaderboard);
     });
 
     socket.on('newGameStarted', (players) => {
@@ -228,6 +261,17 @@
         const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
         leaderboardDiv.innerHTML = '<h3>Leaderboard of Legends</h3>' +
             sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} points</p>`).join('');
+    }
+
+    function updateFinalLeaderboard(leaderboard) {
+        const finalLeaderboardDiv = document.getElementById('final-leaderboard');
+        const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
+        const winner = sortedLeaderboard[0];
+        finalLeaderboardDiv.innerHTML = `
+                <h3>Final Leaderboard</h3>
+                <p class="winner">🏆 Winner: ${winner.name} with ${winner.score} points! 🏆</p>
+                ${sortedLeaderboard.slice(1).map(p => `<p>${p.name}: ${p.score} points</p>`).join('')}
+            `;
     }
 </script>
 </body>
