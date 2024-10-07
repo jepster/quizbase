@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+</head>
+<body>
+<button onclick="sendMessage()">Send Message</button>
+<div id="response"></div>
+
+<script>
+    const socket = io('http://localhost:3000');
+
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('response', (data) => {
+        document.getElementById('response').innerText = data;
+    });
+
+    function sendMessage() {
+        socket.emit('message', 'Hello Server');
+    }
+</script>
+</body>
+</html>
