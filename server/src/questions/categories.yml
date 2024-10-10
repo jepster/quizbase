@@ -1,0 +1,15 @@
+categories:
+  - name: Linux
+    filename: linux.json
+
+  - name: Apple
+    filename: apple.json
+
+  - name: Windows
+    filename: windows.json
+
+  - name: Playstation
+    filename: playstation.json
+    
+  - name: C64
+    filename: c64.json

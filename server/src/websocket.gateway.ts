@@ -1,11 +1,8 @@
-import {
-  WebSocketGateway,
-  SubscribeMessage,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { WebSocketGateway, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 
 interface Room {
   id: string;
@@ -14,6 +11,9 @@ interface Room {
   currentQuestionIndex: number;
   gameStarted: boolean;
   answersReceived: number;
+  categorySelectionIndex: number;
+  selectedCategory: string;
+  readyForNextQuestion: number;
 }
 
 interface Player {
@@ -31,6 +31,11 @@ interface Question {
   explanation: string;
 }
 
+interface Category {
+  name: string;
+  filename: string;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -41,24 +46,23 @@ export class WebsocketGateway {
   server: Server;
 
   private rooms: Map<string, Room> = new Map();
-  private questions: Question[];
+  private categories: Category[];
 
   constructor() {
-    this.loadQuestions();
+    this.loadCategories();
   }
 
-  private loadQuestions() {
-    const filePath = path.join(__dirname, '../src/questions.json');
+  private loadCategories() {
+    const categoriesPath = path.join(__dirname, '../src/questions/categories.yml');
+    const fileContents = fs.readFileSync(categoriesPath, 'utf8');
+    const data = yaml.load(fileContents) as { categories: Category[] };
+    this.categories = data.categories;
+  }
+
+  private loadQuestions(filename: string): Question[] {
+    const filePath = path.join(__dirname, `../src/questions/${filename}`);
     const data = fs.readFileSync(filePath, 'utf8');
-    this.questions = JSON.parse(data);
-  }
-
-  private generateFunnyRoomName(): string {
-    const adjectives = ['Silly', 'Wacky', 'Zany', 'Goofy', 'Quirky', 'Bizarre', 'Whimsical', 'Loony', 'Nutty', 'Kooky'];
-    const nouns = ['Banana', 'Unicorn', 'Pickle', 'Noodle', 'Penguin', 'Waffle', 'Llama', 'Kazoo', 'Flamingo', 'Sushi'];
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${randomAdjective}${randomNoun}`;
+    return JSON.parse(data);
   }
 
   @SubscribeMessage('createRoom')
@@ -71,6 +75,9 @@ export class WebsocketGateway {
       currentQuestionIndex: 0,
       gameStarted: false,
       answersReceived: 0,
+      categorySelectionIndex: 0,
+      selectedCategory: '',
+      readyForNextQuestion: 0,
     });
     return roomId;
   }
@@ -101,27 +108,32 @@ export class WebsocketGateway {
         player.ready = true;
         this.server.to(roomId).emit('playerReady', room.players);
         if (room.players.every(p => p.ready)) {
-          this.startGame(room);
+          this.startCategorySelection(room);
         }
       }
     }
   }
 
-  private startGame(room: Room): void {
-    room.gameStarted = true;
-    room.questions = this.getRandomQuestions(5);
-    room.currentQuestionIndex = 0;
-    room.answersReceived = 0;
-    room.players.forEach(p => {
-      p.score = 0;
-      p.answered = false;
+  private startCategorySelection(room: Room): void {
+    room.categorySelectionIndex = 0;
+    this.server.to(room.id).emit('selectCategory', {
+      categories: this.categories,
+      playerIndex: room.categorySelectionIndex,
+      playerName: room.players[room.categorySelectionIndex].name,
     });
-    this.askNextQuestion(room);
   }
 
-  private getRandomQuestions(count: number): Question[] {
-    const shuffled = [...this.questions].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+  @SubscribeMessage('categorySelected')
+  handleCategorySelected(client: Socket, payload: { roomId: string; categoryName: string }): void {
+    const room = this.rooms.get(payload.roomId);
+    if (room) {
+      room.selectedCategory = payload.categoryName;
+      const category = this.categories.find(c => c.name === payload.categoryName);
+      room.questions = this.loadQuestions(category.filename);
+      room.currentQuestionIndex = 0;
+      room.gameStarted = true;
+      this.askNextQuestion(room);
+    }
   }
 
   private askNextQuestion(room: Room): void {
@@ -129,6 +141,7 @@ export class WebsocketGateway {
       const question = room.questions[room.currentQuestionIndex];
       room.players.forEach(p => p.answered = false);
       room.answersReceived = 0;
+      room.readyForNextQuestion = 0;
       this.server.to(room.id).emit('newQuestion', {
         question: question.question,
         options: question.options,
@@ -166,8 +179,18 @@ export class WebsocketGateway {
       options: question.options,
       leaderboard: room.players.sort((a, b) => b.score - a.score),
     });
-    room.currentQuestionIndex++;
-    setTimeout(() => this.askNextQuestion(room), 5000);
+  }
+
+  @SubscribeMessage('readyForNextQuestion')
+  handleReadyForNextQuestion(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.readyForNextQuestion++;
+      if (room.readyForNextQuestion === room.players.length) {
+        room.currentQuestionIndex++;
+        this.askNextQuestion(room);
+      }
+    }
   }
 
   private endGame(room: Room): void {
@@ -189,7 +212,17 @@ export class WebsocketGateway {
       room.currentQuestionIndex = 0;
       room.gameStarted = false;
       room.answersReceived = 0;
+      room.readyForNextQuestion = 0;
+      room.selectedCategory = '';
       this.server.to(roomId).emit('newGameStarted', room.players);
     }
+  }
+
+  private generateFunnyRoomName(): string {
+    const adjectives = ['Silly', 'Wacky', 'Zany', 'Goofy', 'Quirky', 'Bizarre', 'Whimsical', 'Loony', 'Nutty', 'Kooky'];
+    const nouns = ['Banana', 'Unicorn', 'Pickle', 'Noodle', 'Penguin', 'Waffle', 'Llama', 'Kazoo', 'Flamingo', 'Sushi'];
+    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${randomAdjective}${randomNoun}`;
   }
 }

@@ -1,0 +1,102 @@
+[
+  {
+    "question": "What was Apple's original logo?",
+    "options": [
+      "A bitten apple",
+      "A rainbow apple",
+      "Isaac Newton under an apple tree"
+    ],
+    "correctIndex": 2,
+    "explanation": "Apple's first logo featured Isaac Newton sitting under an apple tree, designed in 1976. It was quickly replaced with the rainbow apple logo in 1977."
+  },
+  {
+    "question": "How much did Apple's third co-founder, Ronald Wayne, sell his 10% stake for in 1976?",
+    "options": [
+      "$800",
+      "$8,000",
+      "$80,000"
+    ],
+    "correctIndex": 0,
+    "explanation": "Ronald Wayne sold his 10% stake in Apple for $800 just 12 days after the company was founded. That stake would be worth billions today."
+  },
+  {
+    "question": "What was the price of the original Apple I computer?",
+    "options": [
+      "$499.99",
+      "$666.66",
+      "$1,000.00"
+    ],
+    "correctIndex": 1,
+    "explanation": "The Apple I was priced at $666.66. Steve Wozniak has said he liked repeating digits and was unaware of any devilish connotations."
+  },
+  {
+    "question": "Which famous sci-fi film inspired the name 'iPod'?",
+    "options": [
+      "Star Wars",
+      "Blade Runner",
+      "2001: A Space Odyssey"
+    ],
+    "correctIndex": 2,
+    "explanation": "The name 'iPod' was inspired by the movie 2001: A Space Odyssey, specifically the line 'Open the pod bay doors, HAL!'"
+  },
+  {
+    "question": "What time is always displayed on Apple's product images in advertisements?",
+    "options": [
+      "9:41",
+      "10:09",
+      "12:00"
+    ],
+    "correctIndex": 0,
+    "explanation": "Apple product images in advertisements typically show the time as 9:41, which was the time Steve Jobs unveiled the original iPhone in 2007."
+  },
+  {
+    "question": "Which Apple CEO was paid only $1 per year?",
+    "options": [
+      "Tim Cook",
+      "Steve Jobs",
+      "John Sculley"
+    ],
+    "correctIndex": 1,
+    "explanation": "Steve Jobs famously had a $1 annual salary from 1997 until 2011, though he owned a significant amount of Apple stock."
+  },
+  {
+    "question": "What was Apple's first consumer product that wasn't a computer?",
+    "options": [
+      "iPod",
+      "iPhone",
+      "Apple Watch"
+    ],
+    "correctIndex": 0,
+    "explanation": "The iPod, released in 2001, was Apple's first consumer product that wasn't a computer."
+  },
+  {
+    "question": "Which company manufactures the displays for many of Apple's products?",
+    "options": [
+      "LG",
+      "Sony",
+      "Samsung"
+    ],
+    "correctIndex": 2,
+    "explanation": "Despite being a major competitor, Samsung has long been a supplier for Apple, manufacturing displays for various Apple products."
+  },
+  {
+    "question": "What unusual product line did Apple launch in 1986?",
+    "options": [
+      "Furniture",
+      "Clothing",
+      "Kitchenware"
+    ],
+    "correctIndex": 1,
+    "explanation": "In 1986, Apple launched a clothing line called 'The Apple Collection', which included items like sweatshirts, hats, and belts."
+  },
+  {
+    "question": "How many Apple Stores were there worldwide as of 2021?",
+    "options": [
+      "Around 300",
+      "Around 500",
+      "Over 500"
+    ],
+    "correctIndex": 2,
+    "explanation": "As of 2021, Apple had over 500 retail stores worldwide, with locations in 25 countries and regions."
+  }
+]

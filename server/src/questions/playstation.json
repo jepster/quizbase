@@ -1,0 +1,102 @@
+[
+  {
+    "question": "In what year was the original PlayStation released?",
+    "options": [
+      "1993",
+      "1994",
+      "1995"
+    ],
+    "correctIndex": 1,
+    "explanation": "The original PlayStation was released in Japan on December 3, 1994, and in North America on September 9, 1995."
+  },
+  {
+    "question": "What is the name of the PlayStation's virtual reality headset?",
+    "options": [
+      "PlayStation Vision",
+      "PlayStation VR",
+      "PS VR"
+    ],
+    "correctIndex": 1,
+    "explanation": "The official name of the virtual reality headset for PlayStation is PlayStation VR."
+  },
+  {
+    "question": "Which game was bundled with the original PlayStation in many regions?",
+    "options": [
+      "Final Fantasy VII",
+      "Tekken",
+      "Crash Bandicoot"
+    ],
+    "correctIndex": 2,
+    "explanation": "Crash Bandicoot was one of the flagship titles and often bundled with the original PlayStation."
+  },
+  {
+    "question": "What is the best-selling game on the PlayStation platform?",
+    "options": [
+      "Gran Turismo",
+      "Grand Theft Auto V",
+      "Final Fantasy VII"
+    ],
+    "correctIndex": 1,
+    "explanation": "As of now, Grand Theft Auto V is the best-selling game on the PlayStation platform."
+  },
+  {
+    "question": "Which PlayStation console introduced the DualShock controller?",
+    "options": [
+      "PlayStation",
+      "PlayStation 2",
+      "PlayStation 3"
+    ],
+    "correctIndex": 1,
+    "explanation": "The DualShock controller was first introduced with the PlayStation 2 in 2000."
+  },
+  {
+    "question": "What was the first handheld console released by Sony?",
+    "options": [
+      "PSP",
+      "PS Vita",
+      "PlayStation Portable"
+    ],
+    "correctIndex": 0,
+    "explanation": "The first handheld console released by Sony was the PlayStation Portable (PSP), launched in 2004."
+  },
+  {
+    "question": "Which iconic character is associated with the PlayStation brand?",
+    "options": [
+      "Mario",
+      "Sonic",
+      "Crash Bandicoot"
+    ],
+    "correctIndex": 2,
+    "explanation": "'Crash Bandicoot' became an iconic character associated with the PlayStation brand in its early years."
+  },
+  {
+    "question": "What feature allows players to download games and updates directly on their console?",
+    "options": [
+      "PlayStation Network",
+      "PlayStation Store",
+      "PS Plus"
+    ],
+    "correctIndex": 0,
+    "explanation": "The PlayStation Network (PSN) allows players to download games, updates, and access online multiplayer services."
+  },
+  {
+    "question": "Which version of PlayStation introduced backward compatibility for PS1 games?",
+    "options": [
+      "PlayStation 2",
+      "PlayStation 3",
+      "PlayStation 4"
+    ],
+    "correctIndex": 0,
+    "explanation": "'PlayStation 2' introduced backward compatibility for most PS1 games."
+  },
+  {
+    "question": "'God of War' features which mythological pantheon?",
+    "options": [
+      "Norse",
+      "Egyptian",
+      "Greek"
+    ],
+    "correctIndex": 2,
+    "explanation": "'God of War' originally features Greek mythology before transitioning to Norse mythology in later installments."
+  }
+]

@@ -105,7 +105,38 @@
         .winner {
             font-size: 1.2em;
             font-weight: bold;
-            color: #FF6200FF;
+            color: #ffd700;
+        }
+        .category-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .category-button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        #category-selection, #category-waiting {
+            text-align: center;
+        }
+        #category-selected {
+            text-align: center;
+            font-size: 1.5em;
+            color: #4CAF50;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f0fff0;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,255,0,0.2);
         }
     </style>
 </head>
@@ -127,6 +158,16 @@
         <ul id="player-list"></ul>
         <button onclick="playerReady()">I'm Ready to Rock!</button>
     </div>
+    <div id="category-selection" class="hidden">
+        <h2>Select a Category</h2>
+        <p id="category-selector"></p>
+        <div id="category-buttons"></div>
+    </div>
+    <div id="category-waiting" class="hidden">
+        <h2>Waiting for Category Selection</h2>
+        <p id="category-waiting-message"></p>
+    </div>
+    <div id="category-selected" class="hidden"></div>
     <div id="game" class="hidden">
         <h2 id="question"></h2>
         <div id="options"></div>
@@ -134,6 +175,7 @@
         <div id="wrong-answer" class="hidden"></div>
         <div id="answer-reveal" class="hidden"></div>
         <div id="leaderboard"></div>
+        <button id="next-question" class="hidden" onclick="readyForNextQuestion()">Next Question</button>
     </div>
     <div id="results" class="hidden">
         <h2>Game Results</h2>
@@ -177,8 +219,18 @@
         document.getElementById('options').innerHTML = '';
     }
 
+    function readyForNextQuestion() {
+        socket.emit('readyForNextQuestion', currentRoom);
+        document.getElementById('next-question').classList.add('hidden');
+    }
+
     function startNewGame() {
         socket.emit('startNewGame', currentRoom);
+    }
+
+    function selectCategory(categoryName) {
+        socket.emit('categorySelected', { roomId: currentRoom, categoryName });
+        document.getElementById('category-selection').classList.add('hidden');
     }
 
     socket.on('playerJoined', (data) => {
@@ -190,8 +242,39 @@
         updatePlayerList(players);
     });
 
-    socket.on('newQuestion', (data) => {
+    socket.on('selectCategory', (data) => {
         document.getElementById('waiting-room').classList.add('hidden');
+        if (data.playerName === currentPlayer) {
+            document.getElementById('category-selection').classList.remove('hidden');
+            document.getElementById('category-selector').textContent = `${data.playerName}, select a category:`;
+            const categoryButtons = document.getElementById('category-buttons');
+            categoryButtons.innerHTML = data.categories.map(category =>
+                `<button class="category-button" onclick="selectCategory('${category.name}')">${category.name}</button>`
+            ).join('');
+        } else {
+            document.getElementById('category-waiting').classList.remove('hidden');
+            document.getElementById('category-waiting-message').textContent = `${data.playerName} is selecting a game category.`;
+        }
+    });
+
+    socket.on('categorySelected', (data) => {
+        document.getElementById('category-selection').classList.add('hidden');
+        document.getElementById('category-waiting').classList.add('hidden');
+        const categorySelectedDiv = document.getElementById('category-selected');
+        categorySelectedDiv.innerHTML = `
+                <h3>🎉 Category Selected! 🎉</h3>
+                <p>Get ready for some awesome ${data.categoryName} questions!</p>
+            `;
+        categorySelectedDiv.classList.remove('hidden');
+        setTimeout(() => {
+            categorySelectedDiv.classList.add('hidden');
+        }, 3000);
+    });
+
+    socket.on('newQuestion', (data) => {
+        document.getElementById('category-selection').classList.add('hidden');
+        document.getElementById('category-waiting').classList.add('hidden');
+        document.getElementById('category-selected').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
         document.getElementById('question').textContent = data.question;
         const optionsDiv = document.getElementById('options');
@@ -201,6 +284,7 @@
         document.getElementById('answer-status').textContent = '';
         document.getElementById('answer-reveal').classList.add('hidden');
         document.getElementById('wrong-answer').classList.add('hidden');
+        document.getElementById('next-question').classList.add('hidden');
         lastSubmittedAnswer = null;
     });
 
@@ -227,6 +311,7 @@
         }
 
         updateLeaderboard(data.leaderboard);
+        document.getElementById('next-question').classList.remove('hidden');
     });
 
     socket.on('gameEnded', (data) => {
