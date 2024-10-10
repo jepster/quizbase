@@ -145,6 +145,7 @@ export class WebsocketGateway {
       this.server.to(room.id).emit('newQuestion', {
         question: question.question,
         options: question.options,
+        categoryName: room.selectedCategory,
       });
     } else {
       this.endGame(room);

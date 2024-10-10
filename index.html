@@ -138,6 +138,16 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,255,0,0.2);
         }
+        #category-subheadline {
+            text-align: center;
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0fff0;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,255,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -145,6 +155,8 @@
     <h1>QuizMaster: Fun for Your Spare Time!</h1>
 </div>
 <div class="container">
+    <div id="category-selected" class="hidden"></div>
+    <div id="category-subheadline" class="hidden"></div>
     <div id="room-creation">
         <h2>Join the Fun!</h2>
         <button onclick="createRoom()">Create a Quirky Room</button>
@@ -167,7 +179,6 @@
         <h2>Waiting for Category Selection</h2>
         <p id="category-waiting-message"></p>
     </div>
-    <div id="category-selected" class="hidden"></div>
     <div id="game" class="hidden">
         <h2 id="question"></h2>
         <div id="options"></div>
@@ -190,6 +201,7 @@
     let currentRoom = '';
     let currentPlayer = '';
     let lastSubmittedAnswer = null;
+    let currentCategory = '';
 
     function createRoom() {
         socket.emit('createRoom', (roomId) => {
@@ -260,12 +272,14 @@
     socket.on('categorySelected', (data) => {
         document.getElementById('category-selection').classList.add('hidden');
         document.getElementById('category-waiting').classList.add('hidden');
+        currentCategory = data.categoryName;
         const categorySelectedDiv = document.getElementById('category-selected');
         categorySelectedDiv.innerHTML = `
                 <h3>🎉 Category Selected! 🎉</h3>
                 <p>Get ready for some awesome ${data.categoryName} questions!</p>
             `;
         categorySelectedDiv.classList.remove('hidden');
+        updateCategorySubheadline();
         setTimeout(() => {
             categorySelectedDiv.classList.add('hidden');
         }, 3000);
@@ -276,6 +290,8 @@
         document.getElementById('category-waiting').classList.add('hidden');
         document.getElementById('category-selected').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
+        currentCategory = data.categoryName;
+        updateCategorySubheadline();
         document.getElementById('question').textContent = data.question;
         const optionsDiv = document.getElementById('options');
         optionsDiv.innerHTML = data.options.map((option, index) =>
@@ -357,6 +373,12 @@
                 <p class="winner">🏆 Winner: ${winner.name} with ${winner.score} points! 🏆</p>
                 ${sortedLeaderboard.slice(1).map(p => `<p>${p.name}: ${p.score} points</p>`).join('')}
             `;
+    }
+
+    function updateCategorySubheadline() {
+        const subheadline = document.getElementById('category-subheadline');
+        subheadline.textContent = `Current Category: ${currentCategory}`;
+        subheadline.classList.remove('hidden');
     }
 </script>
 </body>
