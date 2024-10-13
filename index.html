@@ -5,210 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizMaster: Fun Quizzes for Your Spare Time!</title>
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
-    <style>
-        body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f8ff;
-            color: #333;
-        }
-        .header {
-            background-image: url('https://source.unsplash.com/1600x400/?quiz,fun');
-            background-size: cover;
-            background-position: center;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .header h1 {
-            color: white;
-            text-shadow: 2px 2px 4px #000000;
-            font-size: 3em;
-            background-color: rgba(0,0,0,0.5);
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        button {
-            background-color: #ff69b4;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #ff1493;
-        }
-        input {
-            padding: 10px;
-            margin: 5px 0;
-            border: 2px solid #ff69b4;
-            border-radius: 5px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .hidden {
-            display: none;
-        }
-        #player-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        #player-list li {
-            background-color: #ffe4e1;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #options button {
-            margin: 5px;
-            background-color: #4169e1;
-        }
-        #options button:hover {
-            background-color: #1e90ff;
-        }
-        #leaderboard, #final-leaderboard {
-            background-color: #e6e6fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        #answer-reveal {
-            background-color: #98fb98;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        #wrong-answer {
-            background-color: #ff6347;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        .winner {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #ffd700;
-        }
-        .category-button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: all 0.3s;
-        }
-        .category-button:hover {
-            background-color: #45a049;
-            transform: scale(1.05);
-        }
-        #category-selection, #category-waiting {
-            text-align: center;
-        }
-        #category-selected {
-            text-align: center;
-            font-size: 1.5em;
-            color: #4CAF50;
-            margin: 20px 0;
-            padding: 20px;
-            background-color: #f0fff0;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,255,0,0.2);
-        }
-        #category-subheadline {
-            text-align: center;
-            font-size: 1.2em;
-            color: #4CAF50;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f0fff0;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,255,0,0.2);
-        }
-        #difficulty-subheadline {
-            text-align: center;
-            font-size: 1.2em;
-            color: #4CAF50;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #f0fff0;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,255,0,0.2);
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="header">
-    <h1>QuizMaster: Fun for Your Spare Time!</h1>
-</div>
-<div class="container">
-    <div id="category-selected" class="hidden"></div>
-    <div id="category-subheadline" class="hidden"></div>
-    <div id="difficulty-subheadline" class="hidden"></div>
-    <div id="room-creation">
-        <h2>Join the Fun!</h2>
-        <button onclick="createRoom()">Create a Quirky Room</button>
-        <input id="room-id" placeholder="Enter Quirky Room ID">
-        <input id="player-name" placeholder="Your Funky Nickname">
-        <button onclick="joinRoom()">Join the Party!</button>
-    </div>
-    <div id="waiting-room" class="hidden">
-        <h2>Waiting Room</h2>
-        <h3 id="room-id-display"></h3>
-        <ul id="player-list"></ul>
-        <button onclick="playerReady()">I'm Ready to Rock!</button>
-    </div>
-    <div id="category-selection" class="hidden">
-        <h2>Select a Category</h2>
-        <p id="category-selector"></p>
-        <div id="category-buttons"></div>
-    </div>
-    <div id="difficulty-selection" class="hidden">
-        <h2>Select a Difficulty</h2>
-        <p id="difficulty-selector"></p>
-        <div id="difficulty-buttons"></div>
-    </div>
-    <div id="category-waiting" class="hidden">
-        <h2>Waiting for Category Selection</h2>
-        <p id="category-waiting-message"></p>
-    </div>
-    <div id="game" class="hidden">
-        <h2 id="question"></h2>
-        <div id="options"></div>
-        <div id="answer-status"></div>
-        <div id="wrong-answer" class="hidden"></div>
-        <div id="answer-reveal" class="hidden"></div>
-        <div id="leaderboard"></div>
-        <button id="next-question" class="hidden" onclick="readyForNextQuestion()">Next Question</button>
-    </div>
-    <div id="results" class="hidden">
-        <h2>Game Results</h2>
-        <div id="final-leaderboard"></div>
-        <div id="final-results"></div>
-        <button onclick="startNewGame()">Start Another Crazy Game!</button>
+<div class="h-screen bg-gray-100 flex justify-center items-center">
+    <div class="bg-white w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 p-6 rounded-lg shadow-lg">
+        <div id="category-selected" class="hidden"></div>
+        <div id="category-subheadline" class="hidden"></div>
+        <div id="difficulty-subheadline" class="hidden"></div>
+        <div id="room-creation">
+            <h2 class="text-2xl font-bold mb-4">Join the Fun!</h2>
+            <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="createRoom()">Create a Quirky Room</button>
+            <input id="room-id" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded" placeholder="Enter Quirky Room ID">
+            <input id="player-name" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded" placeholder="Your Funky Nickname">
+            <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="joinRoom()">Join the Party!</button>
+        </div>
+        <div id="waiting-room" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Waiting Room</h2>
+            <h3 id="room-id-display" class="text-xl font-bold mb-2"></h3>
+            <ul id="player-list" class="list-none p-0"></ul>
+            <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="playerReady()">I'm Ready to Rock!</button>
+        </div>
+        <div id="category-selection" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Select a Category</h2>
+            <p id="category-selector" class="text-xl font-bold mb-2"></p>
+            <div id="category-buttons" class="flex flex-wrap justify-center"></div>
+        </div>
+        <div id="difficulty-selection" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Select a Difficulty</h2>
+            <p id="difficulty-selector" class="text-xl font-bold mb-2"></p>
+            <div id="difficulty-buttons" class="flex flex-wrap justify-center"></div>
+        </div>
+        <div id="category-waiting" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Waiting for Category Selection</h2>
+            <p id="category-waiting-message" class="text-xl font-bold mb-2"></p>
+        </div>
+        <div id="game" class="hidden">
+            <h2 id="question" class="text-2xl font-bold mb-4"></h2>
+            <div id="options" class="flex flex-wrap justify-center"></div>
+            <div id="answer-status" class="text-xl font-bold mb-2"></div>
+            <div id="wrong-answer" class="hidden text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg"></div>
+            <div id="answer-reveal" class="hidden text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg"></div>
+            <div id="leaderboard" class="text-xl font-bold mb-2"></div>
+            <button id="next-question" class="hidden bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="readyForNextQuestion()">Next Question</button>
+        </div>
+        <div id="results" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Game Results</h2>
+            <div id="final-leaderboard" class="text-xl font-bold mb-2"></div>
+            <div id="final-results" class="text-xl font-bold mb-2"></div>
+            <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onclick="startNewGame()">Start Another Crazy Game!</button>
+        </div>
     </div>
 </div>
 
@@ -262,22 +108,6 @@
         document.getElementById('category-selection').classList.add('hidden');
     }
 
-    socket.on('selectDifficulty', (data) => {
-        document.getElementById('category-selection').classList.add('hidden');
-        if (data.playerName === currentPlayer) {
-            document.getElementById('difficulty-selection').classList.remove('hidden');
-            document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
-            const difficultyButtons = document.getElementById('difficulty-buttons');
-            difficultyButtons.innerHTML = `
-                    <button class="category-button" onclick="selectDifficulty('high')">High</button>
-                    <button class="category-button" onclick="selectDifficulty('low')">Low</button>
-                `;
-        } else {
-            document.getElementById('category-waiting').classList.remove('hidden');
-            document.getElementById('category-waiting-message').textContent = `${data.playerName} is selecting a difficulty.`;
-        }
-    });
-
     function selectDifficulty(difficulty) {
         socket.emit('difficultySelected', { roomId: currentRoom, difficulty: difficulty });
         document.getElementById('difficulty-selection').classList.add('hidden');
@@ -324,18 +154,31 @@
         }, 3000);
     });
 
+    socket.on('selectDifficulty', (data) => {
+        document.getElementById('category-selection').classList.add('hidden');
+        if (data.playerName === currentPlayer) {
+            document.getElementById('difficulty-selection').classList.remove('hidden');
+            document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
+            const difficultyButtons = document.getElementById('difficulty-buttons');
+            difficultyButtons.innerHTML = `
+                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="selectDifficulty('high')">High</button>
+                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="selectDifficulty('low')">Low</button>
+                `;
+        } else {
+            document.getElementById('category-waiting').classList.remove('hidden');
+            document.getElementById('category-waiting-message').textContent = `${data.playerName} is selecting a difficulty.`;
+        }
+    });
+
     socket.on('newQuestion', (data) => {
         document.getElementById('category-selection').classList.add('hidden');
         document.getElementById('category-waiting').classList.add('hidden');
         document.getElementById('category-selected').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
-        currentCategory = data.categoryName;
-        difficulty = data.difficulty;
-        updateCategorySubheadline();
         document.getElementById('question').textContent = data.question;
         const optionsDiv = document.getElementById('options');
         optionsDiv.innerHTML = data.options.map((option, index) =>
-            `<button onclick="submitAnswer(${index})">${option}</button>`
+            `<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="submitAnswer(${index})">${option}</button>`
         ).join('');
         document.getElementById('answer-status').textContent = '';
         document.getElementById('answer-reveal').classList.add('hidden');
@@ -393,7 +236,7 @@
     function updatePlayerList(players) {
         const playerList = document.getElementById('player-list');
         playerList.innerHTML = players.map(p =>
-            `<li>${p.name} ${p.ready ? '(Ready to Rock!)' : ''}</li>`
+            `<li class="bg-orange-100 p-2 mt-2 mb-2 rounded-lg">${p.name} ${p.ready ? '✔️ (Ready to Rock!)' : ''}</li>`
         ).join('');
     }
 
