@@ -148,6 +148,16 @@
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(0,255,0,0.2);
         }
+        #difficulty-subheadline {
+            text-align: center;
+            font-size: 1.2em;
+            color: #4CAF50;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0fff0;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,255,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -157,6 +167,7 @@
 <div class="container">
     <div id="category-selected" class="hidden"></div>
     <div id="category-subheadline" class="hidden"></div>
+    <div id="difficulty-subheadline" class="hidden"></div>
     <div id="room-creation">
         <h2>Join the Fun!</h2>
         <button onclick="createRoom()">Create a Quirky Room</button>
@@ -174,6 +185,11 @@
         <h2>Select a Category</h2>
         <p id="category-selector"></p>
         <div id="category-buttons"></div>
+    </div>
+    <div id="difficulty-selection" class="hidden">
+        <h2>Select a Difficulty</h2>
+        <p id="difficulty-selector"></p>
+        <div id="difficulty-buttons"></div>
     </div>
     <div id="category-waiting" class="hidden">
         <h2>Waiting for Category Selection</h2>
@@ -202,6 +218,7 @@
     let currentPlayer = '';
     let lastSubmittedAnswer = null;
     let currentCategory = '';
+    let difficulty = '';
 
     function createRoom() {
         socket.emit('createRoom', (roomId) => {
@@ -245,6 +262,27 @@
         document.getElementById('category-selection').classList.add('hidden');
     }
 
+    socket.on('selectDifficulty', (data) => {
+        document.getElementById('category-selection').classList.add('hidden');
+        if (data.playerName === currentPlayer) {
+            document.getElementById('difficulty-selection').classList.remove('hidden');
+            document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
+            const difficultyButtons = document.getElementById('difficulty-buttons');
+            difficultyButtons.innerHTML = `
+                    <button class="category-button" onclick="selectDifficulty('high')">High</button>
+                    <button class="category-button" onclick="selectDifficulty('low')">Low</button>
+                `;
+        } else {
+            document.getElementById('category-waiting').classList.remove('hidden');
+            document.getElementById('category-waiting-message').textContent = `${data.playerName} is selecting a difficulty.`;
+        }
+    });
+
+    function selectDifficulty(difficulty) {
+        socket.emit('difficultySelected', { roomId: currentRoom, difficulty: difficulty });
+        document.getElementById('difficulty-selection').classList.add('hidden');
+    }
+
     socket.on('playerJoined', (data) => {
         updatePlayerList(data.players);
         document.getElementById('room-id-display').textContent = `Quirky Room: ${data.roomId}`;
@@ -273,6 +311,7 @@
         document.getElementById('category-selection').classList.add('hidden');
         document.getElementById('category-waiting').classList.add('hidden');
         currentCategory = data.categoryName;
+        difficulty = data.difficulty;
         const categorySelectedDiv = document.getElementById('category-selected');
         categorySelectedDiv.innerHTML = `
                 <h3>🎉 Category Selected! 🎉</h3>
@@ -291,6 +330,7 @@
         document.getElementById('category-selected').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
         currentCategory = data.categoryName;
+        difficulty = data.difficulty;
         updateCategorySubheadline();
         document.getElementById('question').textContent = data.question;
         const optionsDiv = document.getElementById('options');
@@ -377,8 +417,12 @@
 
     function updateCategorySubheadline() {
         const subheadline = document.getElementById('category-subheadline');
-        subheadline.textContent = `Current Category: ${currentCategory}`;
+        subheadline.textContent = `Category: ${currentCategory}`;
         subheadline.classList.remove('hidden');
+
+        const difficultySubheadline = document.getElementById('difficulty-subheadline');
+        difficultySubheadline.textContent = `Difficulty: ${difficulty}`;
+        difficultySubheadline.classList.remove('hidden');
     }
 </script>
 </body>

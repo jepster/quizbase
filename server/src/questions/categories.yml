@@ -1,15 +1,15 @@
 categories:
   - name: Linux
-    filename: linux.json
+    folder: linux
 
   - name: Apple
-    filename: apple.json
+    folder: apple
 
   - name: Windows
-    filename: windows.json
+    folder: windows
 
   - name: Playstation
-    filename: playstation.json
-    
+    folder: playstation
+
   - name: C64
-    filename: c64.json
+    folder: c64

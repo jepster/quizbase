@@ -14,6 +14,7 @@ interface Room {
   categorySelectionIndex: number;
   selectedCategory: string;
   readyForNextQuestion: number;
+  difficulty: string;
 }
 
 interface Player {
@@ -33,7 +34,7 @@ interface Question {
 
 interface Category {
   name: string;
-  filename: string;
+  folder: string;
 }
 
 @WebSocketGateway({
@@ -52,6 +53,12 @@ export class WebsocketGateway {
     this.loadCategories();
   }
 
+  private loadQuestions(filename: string): Question[] {
+    const filePath = path.join(__dirname, `../src/questions/${filename}`);
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  }
+
   private loadCategories() {
     const categoriesPath = path.join(__dirname, '../src/questions/categories.yml');
     const fileContents = fs.readFileSync(categoriesPath, 'utf8');
@@ -59,10 +66,18 @@ export class WebsocketGateway {
     this.categories = data.categories;
   }
 
-  private loadQuestions(filename: string): Question[] {
-    const filePath = path.join(__dirname, `../src/questions/${filename}`);
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
+  @SubscribeMessage('difficultySelected')
+  handleDifficultySelected(client: Socket, payload: { roomId: string; difficulty: string }): void {
+    const room = this.rooms.get(payload.roomId);
+    if (room) {
+      room.difficulty = payload.difficulty;
+      const category = this.categories.find(c => c.name === room.selectedCategory);
+      const filename = `${category.folder}/${payload.difficulty}.json`;
+      room.questions = this.loadQuestions(filename);
+      room.currentQuestionIndex = 0;
+      room.gameStarted = true;
+      this.askNextQuestion(room);
+    }
   }
 
   @SubscribeMessage('createRoom')
@@ -78,6 +93,7 @@ export class WebsocketGateway {
       categorySelectionIndex: 0,
       selectedCategory: '',
       readyForNextQuestion: 0,
+      difficulty: '',
     });
     return roomId;
   }
@@ -128,11 +144,12 @@ export class WebsocketGateway {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       room.selectedCategory = payload.categoryName;
-      const category = this.categories.find(c => c.name === payload.categoryName);
-      room.questions = this.loadQuestions(category.filename);
-      room.currentQuestionIndex = 0;
-      room.gameStarted = true;
-      this.askNextQuestion(room);
+      this.server.to(room.id).emit('selectDifficulty', {
+        categoryName: room.selectedCategory,
+        playerIndex: room.categorySelectionIndex,
+        playerName: room.players[room.categorySelectionIndex].name,
+        difficulty: room.difficulty,
+      });
     }
   }
 
@@ -146,6 +163,7 @@ export class WebsocketGateway {
         question: question.question,
         options: question.options,
         categoryName: room.selectedCategory,
+        difficulty: room.difficulty,
       });
     } else {
       this.endGame(room);
