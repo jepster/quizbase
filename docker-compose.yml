@@ -2,14 +2,19 @@ version: '3.8'
 
 services:
   frontend:
-    image: nginx:alpine
+    image: nginx:1.25.3-alpine
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
     depends_on:
       - backend
+    networks:
+      - application
 
   backend:
     build:
@@ -19,6 +24,21 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    networks:
+      - application
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email peter.majmesku@gmail.com --agree-tos --no-eff-email -d mobilefish.de
 
 volumes:
   node_modules:
+  certbot-conf:
+  certbot-www:
+
+networks:
+  application:
+    driver: bridge
