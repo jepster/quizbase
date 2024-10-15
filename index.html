@@ -59,7 +59,23 @@
 </div>
 
 <script>
-    const socket = io('http://104.248.132.247:3000');
+    const socket = io('https://mobilefish.de', {
+        path: '/api/socket.io'
+    });
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+    });
+
+    socket.on('connect_timeout', (timeout) => {
+        console.error('Connection timeout:', timeout);
+    });
+
+    socket.on('error', (error) => {
+        console.error('Socket error:', error);
+    });
     let currentRoom = '';
     let currentPlayer = '';
     let lastSubmittedAnswer = null;
