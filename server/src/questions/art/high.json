@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Which artist's painting technique involved flinging paint at the canvas while doing a pirouette?",
+    "options": [
+      "Jackson Pollock",
+      "Wassily Kandinsky",
+      "Mark Rothko"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jackson Pollock's 'action painting' involved flinging paint. Who knew making a mess could be so lucrative?"
+  },
+  {
+    "question": "Which artist's work 'The Physical Impossibility of Death in the Mind of Someone Living' features a preserved shark?",
+    "options": [
+      "Jeff Koons",
+      "Damien Hirst",
+      "Tracey Emin"
+    ],
+    "correctIndex": 1,
+    "explanation": "Damien Hirst's shark artwork. Because nothing says 'art' like a pickled predator!"
+  },
+  {
+    "question": "Which Renaissance artist was rumored to have dissected corpses to study anatomy?",
+    "options": [
+      "Michelangelo",
+      "Raphael",
+      "Leonardo da Vinci"
+    ],
+    "correctIndex": 2,
+    "explanation": "Leonardo da Vinci. His to-do list: 1. Paint Mona Lisa 2. Invent helicopter 3. Dissect corpses"
+  },
+  {
+    "question": "Which artist created the 'Merda d'artista' (Artist's Shit) canned artwork?",
+    "options": [
+      "Marcel Duchamp",
+      "Piero Manzoni",
+      "Yves Klein"
+    ],
+    "correctIndex": 1,
+    "explanation": "Piero Manzoni canned his own feces as art. Talk about a crappy masterpiece!"
+  },
+  {
+    "question": "Which artist's blue period was followed by a rose period?",
+    "options": [
+      "Henri Matisse",
+      "Pablo Picasso",
+      "Claude Monet"
+    ],
+    "correctIndex": 1,
+    "explanation": "Picasso had blue and rose periods. Apparently, he was feeling a bit more rosy after the blues."
+  },
+  {
+    "question": "Which artist created the 'Fountain' urinal artwork?",
+    "options": [
+      "Marcel Duchamp",
+      "Salvador Dalí",
+      "René Magritte"
+    ],
+    "correctIndex": 0,
+    "explanation": "Marcel Duchamp's 'Fountain' was a urinal. He really took the piss out of the art world!"
+  },
+  {
+    "question": "Which artist ate Goya's painting 'The Good Shepherd' as a protest?",
+    "options": [
+      "Ai Weiwei",
+      "Marina Abramović",
+      "Francisco de Goya"
+    ],
+    "correctIndex": 1,
+    "explanation": "Marina Abramović ate the painting. Talk about having expensive taste in food!"
+  },
+  {
+    "question": "Which artist's work 'My Bed' literally featured her unmade, messy bed?",
+    "options": [
+      "Tracey Emin",
+      "Yayoi Kusama",
+      "Frida Kahlo"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tracey Emin's 'My Bed'. Finally, an artwork that makes you feel better about your housekeeping!"
+  },
+  {
+    "question": "Which artist created a sculpture of Michael Jackson and his chimp, Bubbles?",
+    "options": [
+      "Takashi Murakami",
+      "Jeff Koons",
+      "Anish Kapoor"
+    ],
+    "correctIndex": 1,
+    "explanation": "Jeff Koons created this odd couple sculpture. Because why not immortalize pop stars and their pets?"
+  },
+  {
+    "question": "Which artist's work 'Interior Scroll' involved her reading from a scroll she pulled from her vagina?",
+    "options": [
+      "Yoko Ono",
+      "Marina Abramović",
+      "Carolee Schneemann"
+    ],
+    "correctIndex": 2,
+    "explanation": "Carolee Schneemann's 'Interior Scroll'. Talk about a novel way to deliver a message!"
+  }
+]

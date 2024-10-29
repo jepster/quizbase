@@ -1,15 +1,6 @@
 categories:
-  - name: Linux
-    folder: linux
+  - name: Art
+    folder: art
 
-  - name: Apple
-    folder: apple
-
-  - name: Windows
-    folder: windows
-
-  - name: Playstation
-    folder: playstation
-
-  - name: C64
-    folder: c64
+  - name: History
+    folder: history

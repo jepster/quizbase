@@ -1,0 +1,70 @@
+[
+  {
+    "question": "What did Cleopatra allegedly dissolve in vinegar to win a bet?",
+    "options": [
+      "A pearl",
+      "A diamond",
+      "Her dignity"
+    ],
+    "correctIndex": 0,
+    "explanation": "Cleopatra dissolved a pearl in vinegar. Talk about an expensive cocktail!"
+  },
+  {
+    "question": "Which Roman Emperor allegedly made his horse a senator?",
+    "options": [
+      "Julius Caesar",
+      "Caligula",
+      "Mr. Ed"
+    ],
+    "correctIndex": 1,
+    "explanation": "Caligula made his horse a senator. Probably still more productive than some politicians!"
+  },
+  {
+    "question": "What did King George III do during his bouts of madness?",
+    "options": [
+      "Speak to trees",
+      "Wear his crown backwards",
+      "Declare war on cheese"
+    ],
+    "correctIndex": 0,
+    "explanation": "King George III spoke to trees. At least they couldn't argue back!"
+  },
+  {
+    "question": "What unusual pet did President Calvin Coolidge have in the White House?",
+    "options": [
+      "A hippopotamus",
+      "A raccoon",
+      "A velociraptor"
+    ],
+    "correctIndex": 1,
+    "explanation": "Coolidge had a pet raccoon named Rebecca. The original trash panda in the White House!"
+  },
+  {
+    "question": "What did the Great Molasses Flood of 1919 in Boston involve?",
+    "options": [
+      "Actual molasses",
+      "Chocolate syrup",
+      "Politicians' promises"
+    ],
+    "correctIndex": 0,
+    "explanation": "It was an actual flood of molasses. The sweetest disaster in history!"
+  },
+  {
+    "question": "What did Australian soldiers fight against in the 'Emu War' of 1932?",
+    "options": [
+      "Actual emus",
+      "British soldiers",
+      "Their own shadows"
+    ],
+    "correctIndex": 0,
+    "explanation": "They fought against actual emus... and lost. Those birds are tougher than they look!"
+  },
+  {
+    "question": "What did Pope Gregory IX declare as an 'instrument of Satan' in the 13th century?",
+    "options": [
+      "Forks",
+      "Cats",
+      "Left-handed people"
+    ],
+    "correctIndex": 1,
+    "explanation": "Pope Gregory IX condemned cats. Clearly, he never experienced the joy of cat,

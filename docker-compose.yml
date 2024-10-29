@@ -21,8 +21,15 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-#    ports:
-#      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - application
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
     networks:

@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Which famous artist allegedly cut off his own ear?",
+    "options": [
+      "Pablo Picasso",
+      "Vincent van Gogh",
+      "Leonardo da Vinci"
+    ],
+    "correctIndex": 1,
+    "explanation": "Van Gogh supposedly cut off his ear, but hey, at least he didn't need AirPods!"
+  },
+  {
+    "question": "What did the Mona Lisa forget to pack for her portrait?",
+    "options": [
+      "Her eyebrows",
+      "Her teeth",
+      "Her nose"
+    ],
+    "correctIndex": 0,
+    "explanation": "The Mona Lisa famously has no eyebrows. Maybe she was going for that 'smooth forehead' look?"
+  },
+  {
+    "question": "Which of these is NOT a Teenage Mutant Ninja Turtle?",
+    "options": [
+      "Donatello",
+      "Michelangelo",
+      "Picasso"
+    ],
+    "correctIndex": 2,
+    "explanation": "Picasso might have been a artistic ninja, but he wasn't a turtle!"
+  },
+  {
+    "question": "What did Edvard Munch's famous figure forget to do?",
+    "options": [
+      "Smile",
+      "Scream",
+      "Sneeze"
+    ],
+    "correctIndex": 0,
+    "explanation": "In 'The Scream', the figure is definitely not smiling. Maybe they saw their credit card bill?"
+  },
+  {
+    "question": "Which famous sculpture is missing some important limbs?",
+    "options": [
+      "Venus de Milo",
+      "David",
+      "The Thinker"
+    ],
+    "correctIndex": 0,
+    "explanation": "Venus de Milo lost her arms. She probably can't do the YMCA dance now."
+  },
+  {
+    "question": "What did Salvador Dalí like to walk on a leash?",
+    "options": [
+      "A dog",
+      "An anteater",
+      "A melting clock"
+    ],
+    "correctIndex": 1,
+    "explanation": "Dalí walked an anteater. Because regular pets are too mainstream for surrealists!"
+  },
+  {
+    "question": "Which artist made soup cans famous?",
+    "options": [
+      "Andy Warhol",
+      "Campbell's",
+      "Gordon Ramsay"
+    ],
+    "correctIndex": 0,
+    "explanation": "Andy Warhol turned soup cans into art. Who knew grocery shopping could be so cultural?"
+  },
+  {
+    "question": "What did Banksy's artwork do right after being sold at auction?",
+    "options": [
+      "Explode",
+      "Shred itself",
+      "Turn invisible"
+    ],
+    "correctIndex": 1,
+    "explanation": "Banksy's artwork shredded itself after being sold. Talk about a cutting-edge performance!"
+  },
+  {
+    "question": "Which famous painting features a couple who can't kiss because of social distancing?",
+    "options": [
+      "American Gothic",
+      "The Kiss",
+      "The Persistence of Memory"
+    ],
+    "correctIndex": 0,
+    "explanation": "The couple in 'American Gothic' look like they're practicing extreme social distancing!"
+  },
+  {
+    "question": "What did Yoko Ono invite people to do to her artwork?",
+    "options": [
+      "Paint it",
+      "Cut it",
+      "Eat it"
+    ],
+    "correctIndex": 1,
+    "explanation": "Ono invited people to cut her clothing in a performance piece. A truly 'cutting-edge' artist!"
+  }
+]

@@ -18,5 +18,7 @@ module.exports = {
         static: path.join(__dirname, 'dist'),
         compress: true,
         port: 9000,
+        host: '0.0.0.0',
+        allowedHosts: 'all',
     },
 };
