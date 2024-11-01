@@ -23,6 +23,8 @@ services:
       dockerfile: Dockerfile
     #    ports:
     #      - "3000:3000"
+    volumes:
+      - ./server:/usr/src/app
     environment:
       - NODE_ENV=production
     networks:
