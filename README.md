@@ -27,3 +27,7 @@ Deploy via the Makefile:
 ```
 make deploy
 ```
+
+#### HTTP basic auth
+* Username: sandra
+* Password: sandra
