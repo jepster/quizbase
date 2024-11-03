@@ -44,7 +44,7 @@ socket.on('selectCategory', (data) => {
         document.getElementById('category-selector').textContent = `${data.playerName}, select a category:`;
         const categoryButtons = document.getElementById('category-buttons');
         categoryButtons.innerHTML = data.categories.map(category =>
-            `<button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 mr-5 rounded" onclick="window.selectCategory('${category.name}')">${category.name}</button>`
+            `<button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectCategory('${category.name}')">${category.name}</button>`
         ).join('');
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
@@ -76,8 +76,8 @@ socket.on('selectDifficulty', (data) => {
         document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
         const difficultyButtons = document.getElementById('difficulty-buttons');
         difficultyButtons.innerHTML = `
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-5 rounded" onclick="window.selectDifficulty('high')">High</button>
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 mr-5 rounded" onclick="window.selectDifficulty('low')">Low</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('high')">High</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('low')">Low</button>
         `;
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
@@ -93,7 +93,7 @@ socket.on('newQuestion', (data) => {
     document.getElementById('question').textContent = data.question;
     const optionsDiv = document.getElementById('options');
     optionsDiv.innerHTML = data.options.map((option, index) =>
-        `<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 mr-5 px-4 rounded" onclick="window.submitAnswer(${index})">${option}</button>`
+        `<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 m-2 px-4 rounded" onclick="window.submitAnswer(${index})">${option}</button>`
     ).join('');
     document.getElementById('answer-status').textContent = '';
     document.getElementById('answer-reveal').classList.add('hidden');
@@ -133,11 +133,11 @@ socket.on('gameEnded', (data) => {
     document.getElementById('results').classList.remove('hidden');
     updateFinalLeaderboard(data.leaderboard);
     const resultsDiv = document.getElementById('final-results');
-    resultsDiv.innerHTML = data.results.map(q =>
-        `<div>
-            <h4>${q.question}</h4>
-            <p>Correct Answer: ${q.options[q.correctIndex]}</p>
-            <p>Explanation: ${q.explanation}</p>
+    resultsDiv.innerHTML = data.results.map((q, index) =>
+        `<div class="${index % 2 === 0 ? 'bg-green-100' : 'bg-red-100'} p-4 m-2 rounded-lg">
+            <h4 class="font-bold mb-2">${q.question}</h4>
+            <p class="font-semibold">Correct Answer: ${q.options[q.correctIndex]}</p>
+            <p class="mt-2">${q.explanation}</p>
         </div>`
     ).join('');
 });

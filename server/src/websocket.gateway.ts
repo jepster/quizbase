@@ -48,6 +48,7 @@ export class WebsocketGateway {
 
   private rooms: Map<string, Room> = new Map();
   private categories: Category[];
+  private questionsNumberInGame: number = 5;
 
   constructor() {
     this.loadCategories();
@@ -154,7 +155,7 @@ export class WebsocketGateway {
   }
 
   private askNextQuestion(room: Room): void {
-    if (room.currentQuestionIndex < room.questions.length) {
+    if (room.currentQuestionIndex <= this.questionsNumberInGame) {
       const question = room.questions[room.currentQuestionIndex];
       room.players.forEach(p => p.answered = false);
       room.answersReceived = 0;

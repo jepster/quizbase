@@ -1,0 +1,202 @@
+[
+  {
+    "question": "Welchen Spitznamen hat Alice Weidel innerhalb der AfD?",
+    "options": [
+      "Die Eiserne Lady",
+      "Die Sauberfrau",
+      "Die Schweizerin"
+    ],
+    "correctIndex": 1,
+    "explanation": "Alice Weidel wird innerhalb der AfD als 'Sauberfrau' bezeichnet, da sie als bürgerlich und adrett im Auftritt gilt."
+  },
+  {
+    "question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",
+    "options": [
+      "Malermeister",
+      "Zirkusclown",
+      "Imker"
+    ],
+    "correctIndex": 0,
+    "explanation": "Tino Chrupalla war vor seiner politischen Karriere als Malermeister tätig3."
+  },
+  {
+    "question": "Welches überraschende Hobby soll Björn Höcke haben?",
+    "options": [
+      "Ballett tanzen",
+      "Spaziergänge wie Bismarck",
+      "Unterwasser-Hockey"
+    ],
+    "correctIndex": 1,
+    "explanation": "Björn Höcke soll gerne Spaziergänge im Steiger Forest machen, wo angeblich auch Otto von Bismarck spazieren ging."
+  },
+  {
+    "question": "Was trug Alice Weidel bei einem öffentlichen Auftritt zu ihrem dunkelblauen Hosenanzug?",
+    "options": [
+      "Cowboystiefel",
+      "Weiße Sneaker",
+      "Flipflops"
+    ],
+    "correctIndex": 1,
+    "explanation": "Bei einem öffentlichen Auftritt trug Alice Weidel einen dunkelblauen Hosenanzug mit weißen Sneakern."
+  },
+  {
+    "question": "Welche unerwartete Geste machte Alice Weidel gegenüber Björn Höcke bei einem Wahlkampfauftritt?",
+    "options": [
+      "Sie umarmte ihn herzlich",
+      "Sie gab ihm eine Ohrfeige",
+      "Sie ignorierte ihn komplett"
+    ],
+    "correctIndex": 0,
+    "explanation": "Bei einem Wahlkampfauftritt in Erfurt umarmte Alice Weidel Björn Höcke herzlich, was als überraschend galt."
+  },
+  {
+    "question": "Welchen kuriosen Spitznamen hat Björn Höcke für Tino Chrupalla?",
+    "options": [
+      "Der Pinselmann",
+      "Der Ostflügel",
+      "Der Sachse"
+    ],
+    "correctIndex": 1,
+    "explanation": "Tino Chrupalla wird als 'der Ostflügel' bezeichnet, da er den Draht zu den Rechtsradikalen um Thüringen-Chef Björn Höcke hat."
+  },
+  {
+    "question": "Welche ungewöhnliche Forderung stellte Björn Höcke angeblich an Alice Weidel nach ihrer Wahl zur Bundeschefin?",
+    "options": [
+      "Sie solle Thüringisch lernen",
+      "Sie sei nur von seinen Gnaden dort",
+      "Sie müsse jedes Wochenende in Erfurt verbringen"
+    ],
+    "correctIndex": 1,
+    "explanation": "Laut Ohrenzeugen soll Höcke klargemacht haben, dass Weidel nur von seinen Gnaden Bundeschefin sei und nur so lange, wie er es wolle."
+  },
+  {
+    "question": "Welches überraschende Detail wurde über Björn Höckes Umzug nach Thüringen bekannt?",
+    "options": [
+      "Er zog in ein Schloss",
+      "Er wurde von einem NPD-Mitglied unterstützt",
+      "Er kam mit dem Heißluftballon an"
+    ],
+    "correctIndex": 1,
+    "explanation": "Laut Berichten soll Björn Höcke bei seinem Umzug nach Thüringen Hilfe von Thorsten Heise, einem NPD-Mitglied mit krimineller Vergangenheit, erhalten haben."
+  },
+  {
+    "question": "Welche kuriose Freizeitaktivität sollen Björn Höcke und sein Nachbar Thorsten Heise gemeinsam genossen haben?",
+    "options": [
+      "Karaoke singen",
+      "Bier im Garten trinken",
+      "Taubenzüchten"
+    ],
+    "correctIndex": 1,
+    "explanation": "Es wird berichtet, dass Höcke und sein Nachbar Thorsten Heise wiederholt gemeinsam Bier im Garten getrunken haben sollen."
+  },
+  {
+    "question": "Welchen ungewöhnlichen Beruf hatte Alice Weidel vor ihrer politischen Karriere?",
+    "options": [
+      "Zirkusartistin",
+      "Unternehmensberaterin bei Goldman Sachs",
+      "Imkerin"
+    ],
+    "correctIndex": 1,
+    "explanation": "Alice Weidel war vor ihrer politischen Karriere als Unternehmensberaterin unter anderem bei Goldman Sachs tätig."
+  },
+  {
+    "question": "Was soll Björn Höcke laut Berichten in seiner Jugend gemacht haben?",
+    "options": [
+      "Er war Mitglied der Jungen Union",
+      "Er war professioneller Skateboarder",
+      "Er war Mitglied einer Boyband"
+    ],
+    "correctIndex": 0,
+    "explanation": "Laut Berichten war Björn Höcke in seiner Jugend kurzzeitig Mitglied der Jungen Union, der Jugendorganisation der CDU."
+  },
+  {
+    "question": "Welche überraschende Aussage machte Björn Höcke bei einer Rede in Gera?",
+    "options": [
+      "'Morgen gehört uns'",
+      "'Ich liebe Multikulti'",
+      "'Die EU ist unsere Zukunft'"
+    ],
+    "correctIndex": 0,
+    "explanation": "Bei einer Rede in Gera sagte Björn Höcke: 'Morgen gehört uns', was als Anspielung auf nationalistische Rhetorik interpretiert wurde."
+  },
+  {
+    "question": "Welches unerwartete Accessoire trägt Alice Weidel gelegentlich zu ihrem Business-Outfit?",
+    "options": [
+      "Eine Perlenkette",
+      "Ein Cowboyhut",
+      "Ein Superhelden-Cape"
+    ],
+    "correctIndex": 0,
+    "explanation": "Alice Weidel trägt gelegentlich eine Perlenkette zu ihrem Business-Outfit."
+  },
+  {
+    "question": "Welchen kuriosen Spitznamen hat Alice Weidel für den AfD-Flügel, den sie repräsentiert?",
+    "options": [
+      "Der Edel-Flügel",
+      "Die Luxus-Fraktion",
+      "Die Champagner-Truppe"
+    ],
+    "correctIndex": 0,
+    "explanation": "Alice Weidel wird als Repräsentantin des 'Edel-Flügels' der AfD bezeichnet."
+  },
+  {
+    "question": "Was soll Björn Höcke vor seiner politischen Karriere unterrichtet haben?",
+    "options": [
+      "Kochen und Backen",
+      "Sport und Geschichte",
+      "Quantenphysik und Astronomie"
+    ],
+    "correctIndex": 1,
+    "explanation": "Vor seiner politischen Karriere arbeitete Björn Höcke als Sport- und Geschichtslehrer in Hessen."
+  },
+  {
+    "question": "Welche ungewöhnliche Forderung soll die Höcke-Fraktion bezüglich Chrupallas Zukunft in der Partei gestellt haben?",
+    "options": [
+      "Er solle Thüringisch lernen",
+      "Er plane nicht, zur Wiederwahl anzutreten",
+      "Er solle ein Malermeister-Praktikum machen"
+    ],
+    "correctIndex": 1,
+    "explanation": "Die Höcke-Fraktion soll das Gerücht verbreitet haben, dass Chrupalla nicht plane, 2024 zur Wiederwahl als Parteivorsitzender anzutreten."
+  },
+  {
+    "question": "Welche kuriose Angewohnheit soll Björn Höcke bei Interviews haben?",
+    "options": [
+      "Er spricht nur im Reimen",
+      "Er bittet nachträglich, nicht zitiert zu werden",
+      "Er antwortet nur mit Fragen"
+    ],
+    "correctIndex": 1,
+    "explanation": "Björn Höcke soll die Angewohnheit haben, nach Interviews durch seinen Büroleiter darum zu bitten, nicht direkt zitiert zu werden."
+  },
+  {
+    "question": "Welches unerwartete Detail wurde über Alice Weidels Wohnsituation bekannt?",
+    "options": [
+      "Sie lebt in einem Baumhaus",
+      "Sie ist Wahl-Schweizerin",
+      "Sie wohnt in einem umgebauten Bunker"
+    ],
+    "correctIndex": 1,
+    "explanation": "Alice Weidel wird als 'Wahl-Schweizerin' bezeichnet, was auf ihren Wohnsitz in der Schweiz hinweist."
+  },
+  {
+    "question": "Welche überraschende Aussage machte Tino Chrupalla über Alice Weidel in einem Interview?",
+    "options": [
+      "Sie sei eine gute Köchin",
+      "Sie wäre eine sehr gute Kanzlerkandidatin",
+      "Sie sei eine talentierte Sängerin"
+    ],
+    "correctIndex": 1,
+    "explanation": "In einem ARD-Sommerinterview sagte Tino Chrupalla, Alice Weidel wäre eine sehr gute Kanzlerkandidatin, die er unterstützen würde."
+  },
+  {
+    "question": "Welche kuriose Metapher verwendete Chrupalla für die AfD-Strategie bei der nächsten Bundestagswahl?",
+    "options": [
+      "Ein Schachspiel",
+      "Ein Frontalangriff",
+      "Eine Kuchenbackaktion"
+    ],
+    "correctIndex": 1,
+    "explanation": "Chrupalla sagte, die AfD müsse bei der nächsten Bundestagswahl einen 'Frontalangriff' auf die Bundesregierung führen."
+  }
+]

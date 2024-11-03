@@ -1,6 +1,12 @@
 categories:
-  - name: Art
+  - name: Kunst
     folder: art
 
-  - name: History
+  - name: Geschichte
     folder: history
+
+  - name: Musik
+    folder: music
+
+  - name: AFD Fun Facts
+    folder: afd_fun_facts
