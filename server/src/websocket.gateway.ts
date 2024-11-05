@@ -155,7 +155,7 @@ export class WebsocketGateway {
   }
 
   private askNextQuestion(room: Room): void {
-    if (room.currentQuestionIndex <= this.questionsNumberInGame) {
+    if (room.currentQuestionIndex < this.questionsNumberInGame) {
       const question = room.questions[room.currentQuestionIndex];
       room.players.forEach(p => p.answered = false);
       room.answersReceived = 0;
@@ -214,8 +214,12 @@ export class WebsocketGateway {
   }
 
   private endGame(room: Room): void {
+    const answeredQuestions = room.questions.slice(
+      0,
+      room.currentQuestionIndex,
+    );
     this.server.to(room.id).emit('gameEnded', {
-      results: room.questions,
+      results: answeredQuestions,
       leaderboard: room.players.sort((a, b) => b.score - a.score),
     });
   }
