@@ -10,3 +10,12 @@ deploy-with-dependencies:
 
 ssh:
 	ssh root@104.248.132.247
+
+start-client-dev:
+	cd client && npm start
+
+start-server-dev:
+	cd server && npm run start:dev
+
+open-chrome:
+	open -a "Google Chrome" "http://localhost:9000"

@@ -48,7 +48,7 @@ export class WebsocketGateway {
 
   private rooms: Map<string, Room> = new Map();
   private categories: Category[];
-  private questionsNumberInGame: number = 5;
+  private questionsNumberInGame: number = 3;
 
   constructor() {
     this.loadCategories();
@@ -243,8 +243,8 @@ export class WebsocketGateway {
   }
 
   private generateFunnyRoomName(): string {
-    const adjectives = ['Silly', 'Wacky', 'Zany', 'Goofy', 'Quirky', 'Bizarre', 'Whimsical', 'Loony', 'Nutty', 'Kooky'];
-    const nouns = ['Banana', 'Unicorn', 'Pickle', 'Noodle', 'Penguin', 'Waffle', 'Llama', 'Kazoo', 'Flamingo', 'Sushi'];
+    const adjectives = ['Silly', 'Wacky', 'Zany', 'Goofy', 'Quirky', 'Bizarre', 'Whimsical', 'Loony', 'Nutty', 'Kooky', 'Spooky'];
+    const nouns = ['Banana', 'Unicorn', 'Pickle', 'Noodle', 'Penguin', 'Waffle', 'Llama', 'Kazoo', 'Flamingo', 'Sushi', 'Tiger', 'Fish'];
     const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     return `${randomAdjective}${randomNoun}`;

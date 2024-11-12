@@ -214,11 +214,39 @@ function updateLeaderboard(leaderboard) {
 function updateFinalLeaderboard(leaderboard) {
     const finalLeaderboardDiv = document.getElementById('final-leaderboard');
     const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
-    const winner = sortedLeaderboard[0];
+
+    // Group players by score
+    const scoreGroups = sortedLeaderboard.reduce((groups, player) => {
+        if (!groups[player.score]) {
+            groups[player.score] = [];
+        }
+        groups[player.score].push(player);
+        return groups;
+    }, {});
+
+    const topScore = sortedLeaderboard[0].score;
+    const winners = scoreGroups[topScore];
+
+    let winnerHtml;
+    if (winners.length === 1) {
+        winnerHtml = `<p class="winner">🏆 Winner: ${winners[0].name} with ${topScore} points! 🏆</p>`;
+    } else {
+        winnerHtml = `
+            <p class="tie">It's a tie! No clear winner.</p>
+            <p class="winners">Top scorers with ${topScore} points:</p>
+            ${winners.map(w => `<p>${w.name}</p>`).join('')}
+        `;
+    }
+
     finalLeaderboardDiv.innerHTML = `
         <h3>Final Leaderboard</h3>
-        <p class="winner">🏆 Winner: ${winner.name} with ${winner.score} points! 🏆</p>
-        ${sortedLeaderboard.slice(1).map(p => `<p>${p.name}: ${p.score} points</p>`).join('')}
+        ${winnerHtml}
+        <h4>All Scores:</h4>
+        ${Object.entries(scoreGroups)
+        .sort(([scoreA], [scoreB]) => Number(scoreB) - Number(scoreA))
+        .map(([score, players]) => `
+                <p>${score} points: ${players.map(p => p.name).join(', ')}</p>
+            `).join('')}
     `;
 }
 
