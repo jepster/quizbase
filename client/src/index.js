@@ -148,6 +148,14 @@ socket.on('newGameStarted', (players) => {
     updatePlayerList(players);
 });
 
+socket.on('showResultAfterLastReply', (players) => {
+    players.forEach((player) => {
+        if (player.name === currentPlayer) {
+            debugger;
+        }
+    });
+});
+
 // Functions
 window.createRoom = function() {
     socket.emit('createRoom', (roomId) => {
@@ -179,6 +187,11 @@ window.submitAnswer = function(index) {
 
 window.readyForNextQuestion = function() {
     socket.emit('readyForNextQuestion', currentRoom);
+    document.getElementById('next-question').classList.add('hidden');
+};
+
+window.showResultAfterLastReply = function(index) {
+    socket.emit('showResultAfterLastReply', currentRoom);
     document.getElementById('next-question').classList.add('hidden');
 };
 

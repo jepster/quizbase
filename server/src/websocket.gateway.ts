@@ -23,6 +23,7 @@ interface Player {
   score: number;
   ready: boolean;
   answered: boolean;
+  lastQuestionCorrect: boolean;
 }
 
 interface Question {
@@ -109,6 +110,7 @@ export class WebsocketGateway {
         score: 0,
         ready: false,
         answered: false,
+        lastQuestionCorrect: false,
       };
       room.players.push(player);
       client.join(payload.roomId);
@@ -154,6 +156,12 @@ export class WebsocketGateway {
     }
   }
 
+  private showResultAfterLastReply(room: Room): void {
+    if (room.currentQuestionIndex < this.questionsNumberInGame) {
+      this.server.to(room.id).emit('showResultAfterLastReply', room.players);
+    }
+  }
+
   private askNextQuestion(room: Room): void {
     if (room.currentQuestionIndex < this.questionsNumberInGame) {
       const question = room.questions[room.currentQuestionIndex];
@@ -171,16 +179,29 @@ export class WebsocketGateway {
     }
   }
 
+  @SubscribeMessage('showResultAfterLastReply')
+  handleShowResultAfterLastReply(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.readyForNextQuestion++;
+      if (room.readyForNextQuestion === room.players.length) {
+        this.showResultAfterLastReply(room);
+      }
+    }
+  }
+
   @SubscribeMessage('submitAnswer')
   handleSubmitAnswer(client: Socket, payload: { roomId: string; answerIndex: number }): void {
     const room = this.rooms.get(payload.roomId);
     if (room && room.gameStarted) {
       const player = room.players.find(p => p.id === client.id);
+      player.lastQuestionCorrect = false;
       const question = room.questions[room.currentQuestionIndex];
       if (player && question && !player.answered) {
         player.answered = true;
         if (payload.answerIndex === question.correctIndex) {
           player.score += 1;
+          player.lastQuestionCorrect = true;
         }
         room.answersReceived++;
 
