@@ -237,7 +237,7 @@ function updateLeaderboard(leaderboard) {
     const leaderboardDiv = document.getElementById('leaderboard');
     const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
     leaderboardDiv.innerHTML = '<h3>Leaderboard of Legends</h3>' +
-        sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} points</p>`).join('');
+        sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} points - last question correct: ${p.lastQuestionCorrect ? '✅' : '❌'}</p>`).join('');
 }
 
 function updateFinalLeaderboard(leaderboard) {
