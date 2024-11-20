@@ -148,30 +148,17 @@ socket.on('newGameStarted', (players) => {
     updatePlayerList(players);
 });
 
-socket.on('showResultAfterLastReply', (players) => {
-    showResultAfterLastReply();
-    const resultsDiv = document.getElementById('player-answers');
-
-    let resultHTML;
-    players.forEach(player => {
-        const emoji = player.lastQuestionCorrect ? '✅' : '❌';
-        const resultText = player.lastQuestionCorrect ? 'Correct' : 'Incorrect';
-        const textColor = player.lastQuestionCorrect ? 'text-green-500' : 'text-red-500';
-
-        resultHTML += `
-      <li class="py-4 flex items-center">
-        <span class="${textColor} mr-2">${emoji}</span>
-        <span class="text-gray-900 font-medium">${player.name}</span>
-        <span class="ml-auto ${textColor} text-sm">${resultText}</span>
-      </li>
-    `;
-    });
-
-    resultsDiv.innerHTML = resultHTML;
-
-});
-
 // Functions
+window.roomCreation = function() {
+    document.getElementById('start').classList.add('hidden');
+    document.getElementById('room-creation').classList.remove('hidden');
+};
+
+window.roomJoin = function() {
+    document.getElementById('start').classList.add('hidden');
+    document.getElementById('room-join').classList.remove('hidden');
+};
+
 window.createRoom = function() {
     socket.emit('createRoom', (roomId) => {
         currentRoom = roomId;
@@ -203,12 +190,6 @@ window.submitAnswer = function(index) {
 window.readyForNextQuestion = function() {
     socket.emit('readyForNextQuestion', currentRoom);
     document.getElementById('next-question').classList.add('hidden');
-};
-
-window.showResultAfterLastReply = function(index) {
-    socket.emit('showResultAfterLastReply', currentRoom);
-    document.getElementById('next-question').classList.add('hidden');
-    document.getElementById('result-after-last-reply').classList.remove('hidden');
 };
 
 window.startNewGame = function() {

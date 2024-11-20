@@ -14,14 +14,27 @@
             <div id="category-selected" class="hidden"></div>
             <div id="category-subheadline" class="hidden"></div>
             <div id="difficulty-subheadline" class="hidden"></div>
-            <div id="room-creation">
-                <h2 class="text-2xl font-bold mb-4">Join the Fun!</h2>
+            <div id="start">
+                <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+                        onclick="roomCreation()">Create a quiz
+                </button>
+                <button class="bg-blue-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded"
+                        onclick="roomJoin()">Join a quiz
+                </button>
+            </div>
+            <div id="room-creation" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Create a quiz!</h2>
+                <input id="player-name-create" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+                       placeholder="Your Funky Nickname">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                         onclick="createRoom()">Create a Quirky Room
                 </button>
+            </div>
+            <div id="room-join" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Join the Fun!</h2>
                 <input id="room-id" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
                        placeholder="Enter Quirky Room ID">
-                <input id="player-name" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+                <input id="player-name-join" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
                        placeholder="Your Funky Nickname">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                         onclick="joinRoom()">Join the Party!
@@ -45,15 +58,6 @@
                 <p id="difficulty-selector" class="text-xl font-bold mb-2"></p>
                 <div id="difficulty-buttons" class="flex flex-wrap justify-center"></div>
             </div>
-            <div id="result-after-last-reply" class="hidden">
-                <div class="max-w-md mx-auto bg-white rounded-xl overflow-hidden md:max-w-2xl">
-                    <div class="p-8">
-                        <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-4">Antworten der Spieler</div>
-                        <ul id="player-answers" class="divide-y divide-gray-200">
-                        </ul>
-                    </div>
-                </div>
-            </div>
             <div id="category-waiting" class="hidden">
                 <h2 class="text-2xl font-bold mb-4">Waiting for Category Selection</h2>
                 <p id="category-waiting-message" class="text-xl font-bold mb-2"></p>
@@ -68,7 +72,7 @@
                 <div id="leaderboard" class="text-xl font-bold mb-2"></div>
                 <button id="next-question"
                         class="hidden bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                        onclick="showResultAfterLastReply()">Next Question
+                        onclick="readyForNextQuestion()">Next Question
                 </button>
             </div>
             <div id="results" class="hidden">
