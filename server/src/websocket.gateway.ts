@@ -1,8 +1,13 @@
-import { WebSocketGateway, SubscribeMessage, WebSocketServer } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import { OpenAI } from 'openai';
 
 interface Room {
   id: string;
@@ -55,27 +60,32 @@ export class WebsocketGateway {
     this.loadCategories();
   }
 
-  private loadQuestions(filename: string): Question[] {
-    const filePath = path.join(__dirname, `../src/questions/${filename}`);
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  }
-
   private loadCategories() {
-    const categoriesPath = path.join(__dirname, '../src/questions/categories.yml');
+    const categoriesPath = path.join(
+      __dirname,
+      '../src/questions/categories.yml',
+    );
     const fileContents = fs.readFileSync(categoriesPath, 'utf8');
     const data = yaml.load(fileContents) as { categories: Category[] };
     this.categories = data.categories;
   }
 
   @SubscribeMessage('difficultySelected')
-  handleDifficultySelected(client: Socket, payload: { roomId: string; difficulty: string }): void {
+  async handleDifficultySelected(
+    client: Socket,
+    payload: { roomId: string; difficulty: string },
+  ): Promise<void> {
     const room = this.rooms.get(payload.roomId);
     if (room) {
+      const category = this.categories.find(
+        (c) => c.name === room.selectedCategory,
+      );
+
       room.difficulty = payload.difficulty;
-      const category = this.categories.find(c => c.name === room.selectedCategory);
-      const filename = `${category.folder}/${payload.difficulty}.json`;
-      room.questions = this.loadQuestions(filename);
+      room.questions = await this.getQuestionsFromPerplexityAPI(
+        category.name,
+        room.difficulty,
+      );
       room.currentQuestionIndex = 0;
       room.gameStarted = true;
       this.askNextQuestion(room);
@@ -101,7 +111,10 @@ export class WebsocketGateway {
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(client: Socket, payload: { roomId: string; playerName: string }): void {
+  handleJoinRoom(
+    client: Socket,
+    payload: { roomId: string; playerName: string },
+  ): void {
     const room = this.rooms.get(payload.roomId);
     if (room && !room.gameStarted) {
       const player: Player = {
@@ -114,7 +127,9 @@ export class WebsocketGateway {
       };
       room.players.push(player);
       client.join(payload.roomId);
-      this.server.to(payload.roomId).emit('playerJoined', { players: room.players, roomId: room.id });
+      this.server
+        .to(payload.roomId)
+        .emit('playerJoined', { players: room.players, roomId: room.id });
     }
   }
 
@@ -122,11 +137,11 @@ export class WebsocketGateway {
   handlePlayerReady(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
-      const player = room.players.find(p => p.id === client.id);
+      const player = room.players.find((p) => p.id === client.id);
       if (player) {
         player.ready = true;
         this.server.to(roomId).emit('playerReady', room.players);
-        if (room.players.every(p => p.ready)) {
+        if (room.players.every((p) => p.ready)) {
           this.startCategorySelection(room);
         }
       }
@@ -143,7 +158,10 @@ export class WebsocketGateway {
   }
 
   @SubscribeMessage('categorySelected')
-  handleCategorySelected(client: Socket, payload: { roomId: string; categoryName: string }): void {
+  handleCategorySelected(
+    client: Socket,
+    payload: { roomId: string; categoryName: string },
+  ): void {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       room.selectedCategory = payload.categoryName;
@@ -179,6 +197,48 @@ export class WebsocketGateway {
     }
   }
 
+  private async getQuestionsFromPerplexityAPI(
+      category: string,
+      difficulty: string,
+  ): Promise<any> {
+    const apiKey = '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';
+    const client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai' });
+
+    const response = await client.chat.completions.create({
+      model: 'llama-3.1-sonar-small-128k-online',
+      messages: [
+        {
+          role: 'user',
+          content:
+            'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
+            '{"question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",' +
+            '"options": ["Malermeister", "Zirkusclown", "Imker"],' +
+            '"correctIndex": 0,' +
+            '"explanation": "Tino Chrupalla war vor seiner politischen Karriere als Malermeister tätig."}',
+        },
+      ],
+      temperature: 0.7,
+    });
+
+    const content = response.choices[0].message.content;
+    const jsonString = content.replace(/```json\n|\n```/g, '');
+
+    try {
+      const jsonMatch = jsonString.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const data = JSON.parse(jsonMatch[0]);
+        debugger;
+        return data;
+      } else {
+        throw new Error('No JSON array found in the response');
+      }
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      console.log('Raw content:', content);
+      return [];
+    }
+  }
+
   @SubscribeMessage('showResultAfterLastReply')
   handleShowResultAfterLastReply(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
@@ -191,10 +251,13 @@ export class WebsocketGateway {
   }
 
   @SubscribeMessage('submitAnswer')
-  handleSubmitAnswer(client: Socket, payload: { roomId: string; answerIndex: number }): void {
+  handleSubmitAnswer(
+    client: Socket,
+    payload: { roomId: string; answerIndex: number },
+  ): void {
     const room = this.rooms.get(payload.roomId);
     if (room && room.gameStarted) {
-      const player = room.players.find(p => p.id === client.id);
+      const player = room.players.find((p) => p.id === client.id);
       player.lastQuestionCorrect = false;
       const question = room.questions[room.currentQuestionIndex];
       if (player && question && !player.answered) {
@@ -249,7 +312,7 @@ export class WebsocketGateway {
   handleStartNewGame(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
-      room.players.forEach(p => {
+      room.players.forEach((p) => {
         p.ready = false;
         p.score = 0;
         p.answered = false;
@@ -264,9 +327,35 @@ export class WebsocketGateway {
   }
 
   private generateFunnyRoomName(): string {
-    const adjectives = ['Silly', 'Wacky', 'Zany', 'Goofy', 'Quirky', 'Bizarre', 'Whimsical', 'Loony', 'Nutty', 'Kooky', 'Spooky'];
-    const nouns = ['Banana', 'Unicorn', 'Pickle', 'Noodle', 'Penguin', 'Waffle', 'Llama', 'Kazoo', 'Flamingo', 'Sushi', 'Tiger', 'Fish'];
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const adjectives = [
+      'Silly',
+      'Wacky',
+      'Zany',
+      'Goofy',
+      'Quirky',
+      'Bizarre',
+      'Whimsical',
+      'Loony',
+      'Nutty',
+      'Kooky',
+      'Spooky',
+    ];
+    const nouns = [
+      'Banana',
+      'Unicorn',
+      'Pickle',
+      'Noodle',
+      'Penguin',
+      'Waffle',
+      'Llama',
+      'Kazoo',
+      'Flamingo',
+      'Sushi',
+      'Tiger',
+      'Fish',
+    ];
+    const randomAdjective =
+      adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     return `${randomAdjective}${randomNoun}`;
   }
