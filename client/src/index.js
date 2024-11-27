@@ -76,8 +76,8 @@ socket.on('selectDifficulty', (data) => {
         document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
         const difficultyButtons = document.getElementById('difficulty-buttons');
         difficultyButtons.innerHTML = `
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('high')">High</button>
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('low')">Low</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('high');">High</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('low');">Low</button>
         `;
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
@@ -86,6 +86,7 @@ socket.on('selectDifficulty', (data) => {
 });
 
 socket.on('newQuestion', (data) => {
+    document.getElementById('loading').classList.add('hidden');
     document.getElementById('category-selection').classList.add('hidden');
     document.getElementById('category-waiting').classList.add('hidden');
     document.getElementById('category-selected').classList.add('hidden');
@@ -208,8 +209,10 @@ window.selectCategory = function(categoryName) {
 
 window.selectDifficulty = function(difficulty) {
     socket.emit('difficultySelected', { roomId: currentRoom, difficulty: difficulty });
+    document.getElementById('loading').classList.remove('hidden');
     document.getElementById('difficulty-selection').classList.add('hidden');
 };
+
 
 // Helper functions
 function updatePlayerList(players) {
