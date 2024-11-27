@@ -162,17 +162,22 @@ window.roomJoin = function() {
 window.createRoom = function() {
     socket.emit('createRoom', (roomId) => {
         currentRoom = roomId;
-        document.getElementById('room-id').value = roomId;
+        const playerName = document.getElementById('player-name-create').value;
+        currentPlayer = playerName;
+        socket.emit('joinRoom', { roomId, playerName });
+        currentRoom = roomId;
+        document.getElementById('room-creation').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
     });
 };
 
 window.joinRoom = function() {
     const roomId = document.getElementById('room-id').value;
-    const playerName = document.getElementById('player-name').value;
+    const playerName = document.getElementById('player-name-join').value;
     currentPlayer = playerName;
     socket.emit('joinRoom', { roomId, playerName });
     currentRoom = roomId;
-    document.getElementById('room-creation').classList.add('hidden');
+    document.getElementById('room-join').classList.add('hidden');
     document.getElementById('waiting-room').classList.remove('hidden');
 };
 
