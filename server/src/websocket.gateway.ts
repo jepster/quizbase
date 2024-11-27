@@ -54,7 +54,7 @@ export class WebsocketGateway {
 
   private rooms: Map<string, Room> = new Map();
   private categories: Category[];
-  private questionsNumberInGame: number = 3;
+  private questionsNumberInGame: number = 10;
 
   constructor() {
     this.loadCategories();
