@@ -29,12 +29,3 @@ DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 export PROJECT_NAME=quizbase
 DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 PHPSTAN_LVL=8
-
-questions_db_container_build:
-	docker compose -p $(PROJECT_NAME) -f ./questions_db/container/docker-compose.yml build
-
-questions_db_container_up:
-	docker compose -p $(PROJECT_NAME) -f ./questions_db/container/docker-compose.yml up -d
-
-questions_db_composer_install:
-	$(DOCKER_EXEC) "composer install --no-interaction --optimize-autoloader"
