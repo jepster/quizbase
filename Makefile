@@ -37,4 +37,7 @@ container_down:
 	docker compose -p $(PROJECT_NAME) -f ./container/docker-compose.dev.yml down
 
 import_questions:
-	node server/dist/main.js perplexity-command
+	cd server && npm run build && node dist/cli.js perplexity-command
+
+wsl_get_ai_address:
+	ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1

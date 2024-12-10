@@ -1,11 +1,11 @@
 import { Command, CommandRunner } from 'nest-commander';
-import {OpenAI} from "openai";
+import { OpenAI } from "openai";
 import { MongoClient } from 'mongodb';
 
 // Run this command like this: node dist/main.js perplexity-command
 @Command({ name: 'perplexity-command', description: 'Imports questions from perplexity' })
 export class PerplexityCommand extends CommandRunner {
-    private readonly mongoUri = 'mongodb://root:example@localhost:27017'; // Update with your MongoDB URI
+    private readonly mongoUri = 'mongodb://root:example@localhost:27017';
     private readonly dbName = 'quizbase';
     private readonly collectionName = 'trivia_questions';
     private insertedCount = 0;

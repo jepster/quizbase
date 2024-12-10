@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import { OpenAI } from 'openai';
+import { MongoClient } from 'mongodb';
 
 interface Room {
   id: string;
@@ -56,6 +57,10 @@ export class WebsocketGateway {
   private categories: Category[];
   private questionsNumberInGame: number = 10;
 
+  private readonly mongoUri = 'mongodb://root:example@localhost:27017';
+  private readonly dbName = 'quizbase';
+  private readonly collectionName = 'trivia_questions';
+
   constructor() {
     this.loadCategories();
   }
@@ -82,9 +87,13 @@ export class WebsocketGateway {
       );
 
       room.difficulty = payload.difficulty;
-      room.questions = await this.getQuestionsFromPerplexityAPI(
-        category.name,
-        room.difficulty,
+
+      let categoryName = category.name;
+      let roomDifficulty = room.difficulty;
+
+      room.questions = await this.getQuestionsFromMongoDB(
+        categoryName,
+        roomDifficulty,
       );
       room.currentQuestionIndex = 0;
       room.gameStarted = true;
@@ -186,6 +195,7 @@ export class WebsocketGateway {
       room.players.forEach(p => p.answered = false);
       room.answersReceived = 0;
       room.readyForNextQuestion = 0;
+
       this.server.to(room.id).emit('newQuestion', {
         question: question.question,
         options: question.options,
@@ -194,48 +204,6 @@ export class WebsocketGateway {
       });
     } else {
       this.endGame(room);
-    }
-  }
-
-  private async getQuestionsFromPerplexityAPI(
-      category: string,
-      difficulty: string,
-  ): Promise<any> {
-    const apiKey = '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';
-    const client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai' });
-
-    const response = await client.chat.completions.create({
-      model: 'llama-3.1-sonar-small-128k-online',
-      messages: [
-        {
-          role: 'user',
-          content:
-            'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
-            '{"question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",' +
-            '"options": ["Malermeister", "Zirkusclown", "Imker"],' +
-            '"correctIndex": 0,' +
-            '"explanation": "Tino Chrupalla war vor seiner politischen Karriere als Malermeister tätig."}',
-        },
-      ],
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0].message.content;
-    const jsonString = content.replace(/```json\n|\n```/g, '');
-
-    try {
-      const jsonMatch = jsonString.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const data = JSON.parse(jsonMatch[0]);
-        debugger;
-        return data;
-      } else {
-        throw new Error('No JSON array found in the response');
-      }
-    } catch (error) {
-      console.error('Error parsing JSON:', error);
-      console.log('Raw content:', content);
-      return [];
     }
   }
 
@@ -358,5 +326,32 @@ export class WebsocketGateway {
       adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     return `${randomAdjective}${randomNoun}`;
+  }
+
+  private async getQuestionsFromMongoDB(category: string, difficulty: string): Promise<Question[]> {
+    const client = new MongoClient(this.mongoUri);
+
+    try {
+      await client.connect();
+      const db = client.db(this.dbName);
+      const collection = db.collection(this.collectionName);
+
+      const questions = await collection.aggregate([
+        { $match: { category: category, difficulty: difficulty } },
+        { $sample: { size: this.questionsNumberInGame } }
+      ]).toArray();
+
+      return questions.map(q => ({
+        question: q.question,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        explanation: q.explanation
+      }));
+    } catch (error) {
+      console.error('Error fetching questions from MongoDB:', error);
+      return [];
+    } finally {
+      await client.close();
+    }
   }
 }
