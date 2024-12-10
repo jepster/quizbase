@@ -4,8 +4,9 @@ deploy:
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && docker-compose down --remove-orphans && docker-compose up -d"
 
 deploy-with-dependencies:
-	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git root@104.248.132.247:/root/app && cd app && docker-compose restart
+	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp client/.env.dist client/.env"
+	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp server/.env.dist server/.env"
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && docker-compose restart"
 
 ssh:
@@ -31,7 +32,7 @@ DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 PHPSTAN_LVL=8
 
 container-up:
-	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d
+	docker compose -p $(PROJdECT_NAME) -f ./docker-compose.dev.yml up -d
 
 container-down:
 	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml down

@@ -7,8 +7,9 @@ import { Server, Socket } from 'socket.io';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { OpenAI } from 'openai';
 import { MongoClient } from 'mongodb';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 interface Room {
   id: string;
@@ -44,6 +45,7 @@ interface Category {
   folder: string;
 }
 
+@Injectable()
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -57,12 +59,13 @@ export class WebsocketGateway {
   private categories: Category[];
   private questionsNumberInGame: number = 10;
 
-  private readonly mongoUri = 'mongodb://root:example@localhost:27017';
+  private readonly mongoUri = '';
   private readonly dbName = 'quizbase';
   private readonly collectionName = 'trivia_questions';
 
-  constructor() {
+  constructor(private configService: ConfigService) {
     this.loadCategories();
+    this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
   private loadCategories() {
