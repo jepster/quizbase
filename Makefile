@@ -30,14 +30,26 @@ export PROJECT_NAME=quizbase
 DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 PHPSTAN_LVL=8
 
-container_up:
+container-up:
 	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d
 
-container_down:
-	docker compose -p $(PROJECT_NAME) -f ./container/docker-compose.dev.yml down
+container-down:
+	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml down
 
-import_questions:
+import-questions:
 	cd server && npm run build && node dist/cli.js perplexity-command
 
-wsl_get_ai_address:
+wsl-get-ai-address:
 	ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1
+
+mongodb-dump:
+	docker exec -it ${PROJECT_NAME}_mongodb mongodump --authenticationDatabase admin -u root -p example --db quizbase --out /data/db/dump
+
+mongodb-drop:
+	docker exec -it ${PROJECT_NAME}_mongodb mongosh --authenticationDatabase admin -u root -p example --eval "use quizbase; db.trivia_questions.drop();"
+
+mongodb-show:
+	docker exec -it ${PROJECT_NAME}_mongodb mongosh --authenticationDatabase admin -u root -p example --eval "show dbs"
+
+mongodb-restore:
+	docker exec -it ${PROJECT_NAME}_mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase

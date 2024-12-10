@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   mongodb:
@@ -12,12 +10,8 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-    networks:
-      - application
+      - ./dump:/data/db/dump
+    network_mode: host
 
 volumes:
   mongodb_data:
-
-networks:
-  application:
-    driver: host
