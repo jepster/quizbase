@@ -29,3 +29,9 @@ DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 export PROJECT_NAME=quizbase
 DOCKER_EXEC=docker exec $(PROJECT_NAME)_php bash -c
 PHPSTAN_LVL=8
+
+container_up:
+	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d
+
+container_down:
+	docker compose -p $(PROJECT_NAME) -f ./container/docker-compose.dev.yml down
