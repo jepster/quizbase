@@ -55,6 +55,7 @@ volumes:
   node_modules:
   certbot-conf:
   certbot-www:
+  mongodb_data:
 
 networks:
   application:
