@@ -35,3 +35,6 @@ container_up:
 
 container_down:
 	docker compose -p $(PROJECT_NAME) -f ./container/docker-compose.dev.yml down
+
+import_questions:
+	node server/dist/main.js perplexity-command
