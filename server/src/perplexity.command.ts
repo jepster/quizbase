@@ -1,4 +1,4 @@
-import { Command, CommandRunner } from 'nest-commander';
+import { Command, CommandRunner, Option } from 'nest-commander';
 import { OpenAI } from "openai";
 import { MongoClient } from 'mongodb';
 
@@ -11,18 +11,38 @@ export class PerplexityCommand extends CommandRunner {
     private insertedCount = 0;
     private skippedCount = 0;
 
-    async run(passedParams: string[]): Promise<void> {
+    @Option({
+        flags: '-c, --category [category]',
+        description: 'The category for the trivia questions',
+    })
+    parseCategory(val: string): string {
+        return val;
+    }
+
+    @Option({
+        flags: '-d, --difficulty [difficulty]',
+        description: 'The difficulty level for the trivia questions',
+    })
+    parseDifficulty(val: string): string {
+        const lowercaseVal = val.toLowerCase();
+        if (lowercaseVal !== 'high' && lowercaseVal !== 'low') {
+            throw new Error('Invalid difficulty. Only "high" or "low" are allowed.');
+        }
+        return lowercaseVal;
+    }
+
+    async run(passedParams: string[], options?: { category: string, difficulty: string }): Promise<void> {
+        const category = options.category || 'AfD';
+        const difficulty = options.difficulty || 'low';
+
         for (let i = 0; i < 10; i++) {
-            await this.createQuestionIteration();
+            await this.createQuestionIteration(category, difficulty);
         }
     }
 
-    private async createQuestionIteration() {
+    private async createQuestionIteration(category: string, difficulty: string) {
         const apiKey = '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';
         const client = new OpenAI({apiKey, baseURL: 'https://api.perplexity.ai'});
-
-        const category = 'AfD';
-        const difficulty = 'low';
 
         const response = await client.chat.completions.create({
             model: 'llama-3.1-sonar-small-128k-online',
@@ -30,7 +50,7 @@ export class PerplexityCommand extends CommandRunner {
                 {
                     role: 'user',
                     content:
-                        'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Da es 3 Antwortoptionen gibt, muss der Index bei 0 beginnen und bei 2 enden. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
+                        'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Da es 3 Antwortoptionen gibt, muss der Index bei 0 beginnen und bei 2 enden. Die Erklärung muss aus zwei bis drei knappen Sätzen bestehen. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
                         '{"question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",' +
                         '"options": ["Malermeister", "Zirkusclown", "Imker"],' +
                         '"correctIndex": 0,' +
@@ -68,6 +88,11 @@ export class PerplexityCommand extends CommandRunner {
             const collection = db.collection(this.collectionName);
 
             for (const item of dataset) {
+                if (!item.explanation || item.explanation.trim() === '') {
+                    this.skippedCount++;
+                    continue;
+                }
+
                 const existingQuestion = await collection.findOne({ question: item.question });
                 if (!existingQuestion) {
                     const result = await collection.insertOne(item);
@@ -80,11 +105,12 @@ export class PerplexityCommand extends CommandRunner {
             }
 
             console.log(`${this.insertedCount} documents were inserted`);
-            console.log(`${this.skippedCount} documents were skipped (already exist)`);
+            console.log(`${this.skippedCount} documents were skipped (empty explanation or already exist)`);
         } catch (error) {
             console.error('Error storing data in MongoDB:', error);
         } finally {
             await client.close();
         }
     }
+
 }

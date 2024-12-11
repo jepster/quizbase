@@ -30,7 +30,7 @@ socket.on('error', (error) => {
 // Socket event handlers
 socket.on('playerJoined', (data) => {
     updatePlayerList(data.players);
-    document.getElementById('room-id-display').textContent = `Quirky Room: ${data.roomId}`;
+    document.getElementById('room-id-display').textContent = `Raumname: ${data.roomId}`;
 });
 
 socket.on('playerReady', (players) => {
@@ -41,14 +41,14 @@ socket.on('selectCategory', (data) => {
     document.getElementById('waiting-room').classList.add('hidden');
     if (data.playerName === currentPlayer) {
         document.getElementById('category-selection').classList.remove('hidden');
-        document.getElementById('category-selector').textContent = `${data.playerName}, select a category:`;
+        document.getElementById('category-selector').textContent = `${data.playerName}, wähle eine Kategorie aus:`;
         const categoryButtons = document.getElementById('category-buttons');
         categoryButtons.innerHTML = data.categories.map(category =>
             `<button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectCategory('${category.name}')">${category.name}</button>`
         ).join('');
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
-        document.getElementById('category-waiting-message').textContent = `${data.playerName} is selecting a game category.`;
+        document.getElementById('category-waiting-message').textContent = `${data.playerName} wählt eine Spielkategorie aus.`;
     }
 });
 
@@ -73,11 +73,11 @@ socket.on('selectDifficulty', (data) => {
     document.getElementById('category-selection').classList.add('hidden');
     if (data.playerName === currentPlayer) {
         document.getElementById('difficulty-selection').classList.remove('hidden');
-        document.getElementById('difficulty-selector').textContent = `${data.playerName}, select a difficulty:`;
+        document.getElementById('difficulty-selector').textContent = `${data.playerName}, deine Auswahl:`;
         const difficultyButtons = document.getElementById('difficulty-buttons');
         difficultyButtons.innerHTML = `
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('high');">High</button>
-            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('low');">Low</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('high');">Schwer</button>
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectDifficulty('low');">Leicht</button>
         `;
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
@@ -106,21 +106,18 @@ socket.on('newQuestion', (data) => {
 socket.on('answerRevealed', (data) => {
     const answerRevealDiv = document.getElementById('answer-reveal');
     answerRevealDiv.innerHTML = `
-        <h3>Correct Answer: ${data.options[data.correctIndex]}</h3>
-        <p>Explanation: ${data.explanation}</p>
+        <h3>Korrekte Antwort: ${data.options[data.correctIndex]}</h3>
+        <p>Erklärung: ${data.explanation}</p>
     `;
     answerRevealDiv.classList.remove('hidden');
 
     if (lastSubmittedAnswer !== null && lastSubmittedAnswer !== data.correctIndex) {
         const wrongAnswerDiv = document.getElementById('wrong-answer');
-        const funnyMessages = [
-            "Oopsie-daisy! That answer was as wrong as putting pineapple on pizza!",
-            "Holy guacamole! Your answer was so off, it's probably vacationing in Narnia!",
-            "Yikes! That answer was more off-target than a blindfolded archer!",
-            "Oh snap! Your answer just took a wrong turn at Albuquerque!",
-            "Great Scott! Your answer was more mixed up than a chameleon in a bag of Skittles!"
+        const messages = [
+            "Die Antwort war leider falsch.",
+            "Leider war die Antwort falsch."
         ];
-        const randomMessage = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
         wrongAnswerDiv.textContent = randomMessage;
         wrongAnswerDiv.classList.remove('hidden');
     }
@@ -189,7 +186,7 @@ window.playerReady = function() {
 window.submitAnswer = function(index) {
     lastSubmittedAnswer = index;
     socket.emit('submitAnswer', { roomId: currentRoom, answerIndex: index });
-    document.getElementById('answer-status').textContent = 'Answer submitted. Waiting for other players...';
+    document.getElementById('answer-status').textContent = 'Antwort gesendet. Warte auf die anderen Spieler:innen...';
     document.getElementById('options').innerHTML = '';
 };
 
@@ -225,8 +222,8 @@ function updatePlayerList(players) {
 function updateLeaderboard(leaderboard) {
     const leaderboardDiv = document.getElementById('leaderboard');
     const sortedLeaderboard = leaderboard.sort((a, b) => b.score - a.score);
-    leaderboardDiv.innerHTML = '<h3>Leaderboard of Legends</h3>' +
-        sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} points - last question correct: ${p.lastQuestionCorrect ? '✅' : '❌'}</p>`).join('');
+    leaderboardDiv.innerHTML = '<h3>Punktestand</h3>' +
+        sortedLeaderboard.map(p => `<p>${p.name}: ${p.score} Punkte - letzte Antwort korrekt: ${p.lastQuestionCorrect ? '✅' : '❌'}</p>`).join('');
 }
 
 function updateFinalLeaderboard(leaderboard) {
@@ -247,7 +244,7 @@ function updateFinalLeaderboard(leaderboard) {
 
     let winnerHtml;
     if (winners.length === 1) {
-        winnerHtml = `<p class="winner">🏆 Winner: ${winners[0].name} with ${topScore} points! 🏆</p>`;
+        winnerHtml = `<p class="winner">🏆 Gewinner: ${winners[0].name} mit ${topScore} Punkten! 🏆</p>`;
     } else {
         winnerHtml = `
             <p class="tie">It's a tie! No clear winner.</p>
@@ -257,13 +254,13 @@ function updateFinalLeaderboard(leaderboard) {
     }
 
     finalLeaderboardDiv.innerHTML = `
-        <h3>Final Leaderboard</h3>
+        <h3>Spielergebnisse</h3>
         ${winnerHtml}
-        <h4>All Scores:</h4>
+        <h4>Alle Punkte:</h4>
         ${Object.entries(scoreGroups)
         .sort(([scoreA], [scoreB]) => Number(scoreB) - Number(scoreA))
         .map(([score, players]) => `
-                <p>${score} points: ${players.map(p => p.name).join(', ')}</p>
+                <p>${score} Punkte: ${players.map(p => p.name).join(', ')}</p>
             `).join('')}
     `;
 }

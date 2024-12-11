@@ -19,50 +19,50 @@
             <div id="difficulty-subheadline" class="hidden"></div>
             <div id="start">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                        onclick="roomCreation()">Create a quiz
+                        onclick="roomCreation()">Quiz erstellen
                 </button>
                 <button class="bg-blue-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded"
-                        onclick="roomJoin()">Join a quiz
+                        onclick="roomJoin()">Quiz beitreten
                 </button>
             </div>
             <div id="room-creation" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Create a quiz!</h2>
+                <h2 class="text-2xl font-bold mb-4">Quiz erstellen</h2>
                 <input id="player-name-create" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
-                       placeholder="Your Funky Nickname">
+                       placeholder="Dein Name">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                        onclick="createRoom()">Create a Quirky Room
+                        onclick="createRoom()">Raum erstellen
                 </button>
             </div>
             <div id="room-join" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Join the Fun!</h2>
+                <h2 class="text-2xl font-bold mb-4">Raum beitreten</h2>
                 <input id="room-id" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
-                       placeholder="Enter Quirky Room ID">
+                       placeholder="Raum ID">
                 <input id="player-name-join" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
-                       placeholder="Your Funky Nickname">
+                       placeholder="Dein Name">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                        onclick="joinRoom()">Join the Party!
+                        onclick="joinRoom()">Party beitreten
                 </button>
             </div>
             <div id="waiting-room" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Waiting Room</h2>
+                <h2 class="text-2xl font-bold mb-4">Warteraum</h2>
             <h3 id="room-id-display" class="text-xl font-bold mb-2"></h3>
             <ul id="player-list" class="list-none p-0"></ul>
             <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                    onclick="playerReady()">I'm Ready to Rock!
+                    onclick="playerReady()">Bereit
             </button>
             </div>
             <div id="category-selection" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Select a Category</h2>
+                <h2 class="text-2xl font-bold mb-4">Wähle eine Kategorie</h2>
                 <p id="category-selector" class="text-xl font-bold mb-2"></p>
                 <div id="category-buttons" class="flex flex-wrap justify-center"></div>
             </div>
             <div id="difficulty-selection" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Select a Difficulty</h2>
+                <h2 class="text-2xl font-bold mb-4">Wähle den Schwierigkeitsgrad</h2>
                 <p id="difficulty-selector" class="text-xl font-bold mb-2"></p>
                 <div id="difficulty-buttons" class="flex flex-wrap justify-center"></div>
             </div>
             <div id="category-waiting" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Waiting for Category Selection</h2>
+                <h2 class="text-2xl font-bold mb-4">Warte auf Kategorieauswahl</h2>
                 <p id="category-waiting-message" class="text-xl font-bold mb-2"></p>
             </div>
             <div id="game" class="hidden">
@@ -79,7 +79,7 @@
                 </button>
             </div>
             <div id="results" class="hidden">
-                <h2 class="text-2xl font-bold mb-4">Game Results</h2>
+                <h2 class="text-2xl font-bold mb-4">Spielergebnisse</h2>
                 <div id="final-leaderboard" class="text-xl font-bold mb-2"></div>
                 <div id="final-results" class="text-xl font-bold mb-2"></div>
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"

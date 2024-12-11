@@ -24,8 +24,9 @@ start-client-dev:
 start-server-dev:
 	cd server && npm run start:debug
 
-open-chrome:
-	open -a "Google Chrome" "http://localhost:9000"
+open-chrome-with-wsl-ip:
+	@IP=$$(ip addr show eth0 | grep "inet\b" | awk '{print $$2}' | cut -d/ -f1); \
+	explorer.exe "http://$$IP:9000"
 
 # Questions DB
 #############
@@ -44,19 +45,10 @@ container-down:
 	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml down
 
 import-questions:
-	cd server && npm run build && node dist/cli.js perplexity-command
-
-wsl-get-ai-address:
-	ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1
+	cd server && npm run build && node dist/cli.js perplexity-command --category "${category}" --difficulty ${difficulty}
 
 mongodb-dump:
 	docker exec -it ${PROJECT_NAME}_mongodb mongodump --authenticationDatabase admin -u root -p example --db quizbase --out /data/db/dump
-
-mongodb-drop:
-	docker exec -it ${PROJECT_NAME}_mongodb mongosh --authenticationDatabase admin -u root -p example --eval "use quizbase; db.trivia_questions.drop();"
-
-mongodb-show:
-	docker exec -it ${PROJECT_NAME}_mongodb mongosh --authenticationDatabase admin -u root -p example --eval "show dbs"
 
 mongodb-restore:
 	docker exec -it ${PROJECT_NAME}_mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase

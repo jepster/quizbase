@@ -344,12 +344,16 @@ export class WebsocketGateway {
         { $sample: { size: this.questionsNumberInGame } }
       ]).toArray();
 
-      return questions.map(q => ({
+      const uniqueQuestions = this.removeDuplicates(questions.map(q => ({
         question: q.question,
         options: q.options,
         correctIndex: q.correctIndex,
         explanation: q.explanation
-      }));
+      })));
+
+      const shuffledQuestions = this.shuffleArray(uniqueQuestions);
+
+      return shuffledQuestions;
     } catch (error) {
       console.error('Error fetching questions from MongoDB:', error);
       return [];
@@ -357,4 +361,22 @@ export class WebsocketGateway {
       await client.close();
     }
   }
+
+  private removeDuplicates(questions: Question[]): Question[] {
+    const seen = new Set();
+    return questions.filter(q => {
+      const duplicate = seen.has(q.question);
+      seen.add(q.question);
+      return !duplicate;
+    });
+  }
+
+  private shuffleArray(array: Question[]): Question[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
 }
