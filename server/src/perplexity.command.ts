@@ -30,7 +30,7 @@ export class PerplexityCommand extends CommandRunner {
                 {
                     role: 'user',
                     content:
-                        'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
+                        'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Da es 3 Antwortoptionen gibt, muss der Index bei 0 beginnen und bei 2 enden. Die Kategorie ist ' + category + ' und der Schwierigkeitsgrad: ' + difficulty + '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
                         '{"question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",' +
                         '"options": ["Malermeister", "Zirkusclown", "Imker"],' +
                         '"correctIndex": 0,' +
