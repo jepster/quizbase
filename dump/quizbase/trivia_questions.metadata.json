@@ -1,1 +1,1 @@
-{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"363035e948d64b7192671c648736d53d","collectionName":"trivia_questions","type":"collection"}
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"419218cd83fe4b47b99e46ed3de67146","collectionName":"trivia_questions","type":"collection"}
