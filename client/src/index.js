@@ -169,6 +169,26 @@ window.createRoom = function() {
     });
 };
 
+window.joinRoomByLink = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId');
+    const playerName = urlParams.get('playerName');
+
+    if (roomId && playerName) {
+        localStorage.setItem('authToken', 'authenticated');
+        currentPlayer = playerName;
+        socket.emit('joinRoom', { roomId, playerName });
+        currentRoom = roomId;
+
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('room-join').classList.add('hidden');
+        document.getElementById('waiting-room').classList.remove('hidden');
+        document.getElementById('start').classList.add('hidden');
+    } else {
+        console.error('Room ID and Player Name are required');
+    }
+}
+
 window.joinRoom = function() {
     const roomId = document.getElementById('room-id').value;
     const playerName = document.getElementById('player-name-join').value;
@@ -274,3 +294,51 @@ function updateCategorySubheadline() {
     difficultySubheadline.textContent = `Difficulty: ${difficulty}`;
     difficultySubheadline.classList.remove('hidden');
 }
+
+window.login = function() {
+    const codeword = document.getElementById('codeword').value;
+
+    if (codeword === 'sandra') {
+        localStorage.setItem('authToken', 'authenticated');
+        checkAuthentication();
+    } else {
+        const error = document.getElementById('login-error');
+        error.classList.remove('hidden');
+        setTimeout(() => error.classList.add('hidden'), 3000);
+    }
+}
+
+window.shareOnWhatsApp = function() {
+    const currentDomain = window.location.origin;
+    const roomId = currentRoom;
+    const randomUsername = 'User' + Math.floor(Math.random() * 1000);
+
+    const shareUrl = `${currentDomain}?roomId=${roomId}&playerName=${randomUsername}`;
+    const encodedShareUrl = encodeURIComponent(shareUrl);
+
+    const whatsappUrl = `https://wa.me/?text=Join%20my%20quiz%20game!%20${encodedShareUrl}`;
+
+    window.open(whatsappUrl, '_blank');
+}
+
+function checkAuthentication() {
+    // Check for roomId and playerName in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('roomId');
+    const playerName = urlParams.get('playerName');
+
+    if (roomId && playerName) {
+        window.joinRoomByLink();
+        return;
+    }
+
+    const authToken = localStorage.getItem('authToken');
+    if (authToken === 'authenticated') {
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('start').classList.remove('hidden');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthentication();
+});
