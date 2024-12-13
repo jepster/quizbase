@@ -98,10 +98,6 @@ export class PerplexityCommand extends CommandRunner {
                     continue;
                 }
 
-                if (!item._id) {
-                    item._id = new ObjectId();
-                }
-
                 const existingQuestion = await collection.findOne({ question: item.question });
                 if (!existingQuestion) {
                     const result = await collection.insertOne(item);
