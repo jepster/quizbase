@@ -44,7 +44,7 @@ socket.on('selectCategory', (data) => {
         document.getElementById('category-selector').textContent = `${data.playerName}, wähle eine Kategorie aus:`;
         const categoryButtons = document.getElementById('category-buttons');
         categoryButtons.innerHTML = data.categories.map(category =>
-            `<button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectCategory('${category.name}')">${category.name}</button>`
+            `<button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onclick="window.selectCategory('${category}')">${category}</button>`
         ).join('');
     } else {
         document.getElementById('category-waiting').classList.remove('hidden');
@@ -134,7 +134,7 @@ socket.on('gameEnded', (data) => {
     resultsDiv.innerHTML = data.results.map((q, index) =>
         `<div class="${index % 2 === 0 ? 'bg-green-100' : 'bg-red-100'} p-4 m-2 rounded-lg">
             <h4 class="font-bold mb-2">${q.question}</h4>
-            <p class="font-semibold">Correct Answer: ${q.options[q.correctIndex]}</p>
+            <p class="font-semibold">Richtige Antwort: ${q.options[q.correctIndex]}</p>
             <p class="mt-2">${q.explanation}</p>
         </div>`
     ).join('');

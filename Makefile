@@ -45,10 +45,13 @@ container-down:
 	docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml down
 
 import-questions:
-	cd server && npm run build && node dist/cli.js perplexity-command --category "${category}" --difficulty ${difficulty}
+	cd server && npm run build && node dist/cli.js perplexity-command --category "${category}"
 
 mongodb-dump:
 	docker exec -it ${PROJECT_NAME}_mongodb mongodump --authenticationDatabase admin -u root -p example --db quizbase --out /data/db/dump
 
 mongodb-restore:
 	docker exec -it ${PROJECT_NAME}_mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase
+
+dev:
+	concurrently "cd client && npm start" "cd server && npm run --inspect-brk start:debug" "docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d" "make open-chrome-with-wsl-ip"

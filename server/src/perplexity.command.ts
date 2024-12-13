@@ -16,6 +16,9 @@ export class PerplexityCommand extends CommandRunner {
         description: 'The category for the trivia questions',
     })
     parseCategory(val: string): string {
+        if (val === '') {
+            throw new Error('Invalid category. You must enter a category.');
+        }
         return val;
     }
 
@@ -32,12 +35,14 @@ export class PerplexityCommand extends CommandRunner {
     }
 
     async run(passedParams: string[], options?: { category: string, difficulty: string }): Promise<void> {
-        const category = options.category || 'AfD';
-        const difficulty = options.difficulty || 'low';
+        const category = options.category;
 
-        for (let i = 0; i < 10; i++) {
-            await this.createQuestionIteration(category, difficulty);
-        }
+        await (async (category) => {
+            const difficulties = ['high', 'low'];
+            await Promise.all(difficulties.map(async (difficulty) => {
+                await Promise.all(Array(10).fill(null).map(() => this.createQuestionIteration(category, difficulty)));
+            }));
+        })(category);
     }
 
     private async createQuestionIteration(category: string, difficulty: string) {

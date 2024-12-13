@@ -4,10 +4,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as yaml from 'js-yaml';
-import { MongoClient } from 'mongodb';
+import {Collection, MongoClient} from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -40,11 +37,6 @@ interface Question {
   explanation: string;
 }
 
-interface Category {
-  name: string;
-  folder: string;
-}
-
 @Injectable()
 @WebSocketGateway({
   cors: {
@@ -56,7 +48,7 @@ export class WebsocketGateway {
   server: Server;
 
   private rooms: Map<string, Room> = new Map();
-  private categories: Category[];
+  private categories: string[];
   private questionsNumberInGame: number = 10;
 
   private readonly mongoUri = '';
@@ -64,18 +56,16 @@ export class WebsocketGateway {
   private readonly collectionName = 'trivia_questions';
 
   constructor(private configService: ConfigService) {
-    this.loadCategories();
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
-  private loadCategories() {
-    const categoriesPath = path.join(
-      __dirname,
-      '../src/questions/categories.yml',
-    );
-    const fileContents = fs.readFileSync(categoriesPath, 'utf8');
-    const data = yaml.load(fileContents) as { categories: Category[] };
-    this.categories = data.categories;
+  async loadCategories(): Promise<void> {
+    try {
+      const collection = await this.getMongoDbCollection();
+      this.categories = await collection.distinct('category');
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
   }
 
   @SubscribeMessage('difficultySelected')
@@ -86,12 +76,12 @@ export class WebsocketGateway {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       const category = this.categories.find(
-        (c) => c.name === room.selectedCategory,
+        (c) => c === room.selectedCategory,
       );
 
       room.difficulty = payload.difficulty;
 
-      let categoryName = category.name;
+      let categoryName = category;
       let roomDifficulty = room.difficulty;
 
       room.questions = await this.getQuestionsFromMongoDB(
@@ -160,8 +150,9 @@ export class WebsocketGateway {
     }
   }
 
-  private startCategorySelection(room: Room): void {
+  private async startCategorySelection(room: Room): Promise<void> {
     room.categorySelectionIndex = 0;
+    await this.loadCategories();
     this.server.to(room.id).emit('selectCategory', {
       categories: this.categories,
       playerIndex: room.categorySelectionIndex,
@@ -331,14 +322,16 @@ export class WebsocketGateway {
     return `${randomAdjective}${randomNoun}`;
   }
 
-  private async getQuestionsFromMongoDB(category: string, difficulty: string): Promise<Question[]> {
+  private async getMongoDbCollection(): Promise<Collection> {
     const client = new MongoClient(this.mongoUri);
+    await client.connect();
+    const db = client.db(this.dbName);
+    return db.collection(this.collectionName);
+  }
 
+  private async getQuestionsFromMongoDB(category: string, difficulty: string): Promise<Question[]> {
     try {
-      await client.connect();
-      const db = client.db(this.dbName);
-      const collection = db.collection(this.collectionName);
-
+      const collection = await this.getMongoDbCollection();
       const questions = await collection.aggregate([
         { $match: { category: category, difficulty: difficulty } },
         { $sample: { size: this.questionsNumberInGame } }
@@ -357,8 +350,6 @@ export class WebsocketGateway {
     } catch (error) {
       console.error('Error fetching questions from MongoDB:', error);
       return [];
-    } finally {
-      await client.close();
     }
   }
 
