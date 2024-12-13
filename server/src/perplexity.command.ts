@@ -1,6 +1,6 @@
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { OpenAI } from "openai";
-import { MongoClient } from 'mongodb';
+import {MongoClient, ObjectId} from 'mongodb';
 
 // Run this command like this: node dist/main.js perplexity-command
 @Command({ name: 'perplexity-command', description: 'Imports questions from perplexity' })
@@ -96,6 +96,10 @@ export class PerplexityCommand extends CommandRunner {
                 if (!item.explanation || item.explanation.trim() === '') {
                     this.skippedCount++;
                     continue;
+                }
+
+                if (!item._id) {
+                    item._id = new ObjectId();
                 }
 
                 const existingQuestion = await collection.findOne({ question: item.question });
