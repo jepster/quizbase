@@ -326,7 +326,6 @@ function checkAuthentication() {
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('roomId');
     const playerName = urlParams.get('playerName');
-
     if (roomId && playerName) {
         window.joinRoomByLink();
         return;
