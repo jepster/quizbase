@@ -3,7 +3,7 @@ deploy:
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
-	ssh -t root@104.248.132.247 "cd app && docker-compose down --volumes --remove-orphans"
+	ssh -t root@104.248.132.247 "cd app && docker-compose down --remove-orphans"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 	ssh -t root@104.248.132.247 "docker exec mongodb bash -c 'until mongosh --eval \"db.adminCommand({ ping: 1 })\" > /dev/null 2>&1; do sleep 1; done'"
 	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
