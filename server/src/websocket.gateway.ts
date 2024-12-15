@@ -2,6 +2,8 @@ import {
   WebSocketGateway,
   SubscribeMessage,
   WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import {Collection, MongoClient} from 'mongodb';
@@ -39,11 +41,11 @@ interface Question {
 
 @Injectable()
 @WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
+  cors: { origin: '*' },
+  pingInterval: 10000,
+  pingTimeout: 5000
 })
-export class WebsocketGateway {
+export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -73,6 +75,7 @@ export class WebsocketGateway {
     client: Socket,
     payload: { roomId: string; difficulty: string },
   ): Promise<void> {
+    debugger;
     const room = this.rooms.get(payload.roomId);
     if (room) {
       const category = this.categories.find(
@@ -96,6 +99,7 @@ export class WebsocketGateway {
 
   @SubscribeMessage('createRoom')
   handleCreateRoom(client: Socket): string {
+    console.debug('Peter, it is createRoom');
     const roomId = this.generateFunnyRoomName();
     this.rooms.set(roomId, {
       id: roomId,
@@ -151,6 +155,8 @@ export class WebsocketGateway {
   }
 
   private async startCategorySelection(room: Room): Promise<void> {
+    debugger;
+    console.debug('Peter, it is startCategorySelection!');
     room.categorySelectionIndex = 0;
     await this.loadCategories();
     this.server.to(room.id).emit('selectCategory', {
@@ -368,6 +374,29 @@ export class WebsocketGateway {
       [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+  }
+
+  @SubscribeMessage('getGameState')
+  handleGetGameState(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      client.emit('gameStateUpdate', {
+        players: room.players,
+        currentQuestionIndex: room.currentQuestionIndex,
+        gameStarted: room.gameStarted,
+        selectedCategory: room.selectedCategory,
+        difficulty: room.difficulty
+      });
+    }
+  }
+
+  handleConnection(client: Socket): void {
+    console.log(`Client connected: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket): void {
+    console.log(`Client disconnected: ${client.id}`);
+    // Implementieren Sie hier die Logik zur Behandlung von Spieler-Disconnects
   }
 
 }

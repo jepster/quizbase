@@ -1,7 +1,12 @@
 import { io } from 'socket.io-client';
 
 const socket = io(process.env.SOCKET_URL, {
-    path: process.env.PATH
+    path: process.env.PATH,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
 });
 
 let currentRoom = '';
@@ -9,6 +14,31 @@ let currentPlayer = '';
 let lastSubmittedAnswer = null;
 let currentCategory = '';
 let difficulty = '';
+
+let isConnected = true;
+
+// Add this function to toggle the connection
+function toggleConnection() {
+    if (isConnected) {
+        socket.disconnect();
+        console.log('Manually disconnected');
+        isConnected = false;
+    } else {
+        socket.connect();
+        console.log('Manually reconnected');
+        isConnected = true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthentication();
+
+    // Add event listener for the debug button
+    const debugButton = document.getElementById('debug-button');
+    if (debugButton) {
+        debugButton.addEventListener('click', toggleConnection);
+    }
+});
 
 // Socket event listeners
 socket.on('connect', () => {
@@ -200,6 +230,8 @@ window.joinRoom = function() {
 };
 
 window.playerReady = function() {
+    console.log('playerReady run');
+    console.log('currentRoom: ' + currentRoom);
     socket.emit('playerReady', currentRoom);
 };
 
@@ -340,4 +372,31 @@ function checkAuthentication() {
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthentication();
+});
+
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        socket.connect();
+        updateGameState();
+    }
+});
+
+function updateGameState() {
+    if (currentRoom) {
+        socket.emit('getGameState', currentRoom);
+    }
+}
+
+socket.on('connect', () => {
+    console.log('Connected to server again');
+    updateGameState();
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected from server:', reason);
+});
+
+socket.on('reconnect', (attemptNumber) => {
+    console.log('Reconnected to server after', attemptNumber, 'attempts');
+    updateGameState();
 });

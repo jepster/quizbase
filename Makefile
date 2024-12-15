@@ -7,12 +7,14 @@ deploy:
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 #	ssh -t root@104.248.132.247 "docker exec mongodb bash -c 'until mongosh --eval \"db.adminCommand({ ping: 1 })\" > /dev/null 2>&1; do sleep 1; done'"
 #	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
+	(cd client && rm .env && cp .env.local .env)
 
 deploy-with-dependencies:
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp server/.env.dist server/.env"
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && docker-compose restart"
+	(cd client && rm .env && cp .env.local .env)
 
 ssh:
 	ssh root@104.248.132.247
