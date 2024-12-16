@@ -75,7 +75,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     client: Socket,
     payload: { roomId: string; difficulty: string },
   ): Promise<void> {
-    debugger;
     const room = this.rooms.get(payload.roomId);
     if (room) {
       const category = this.categories.find(
@@ -99,7 +98,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   @SubscribeMessage('createRoom')
   handleCreateRoom(client: Socket): string {
-    console.debug('Peter, it is createRoom');
     const roomId = this.generateFunnyRoomName();
     this.rooms.set(roomId, {
       id: roomId,
@@ -140,13 +138,15 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   @SubscribeMessage('playerReady')
-  handlePlayerReady(client: Socket, roomId: string): void {
-    const room = this.rooms.get(roomId);
+  handlePlayerReady(client: Socket, payload: {currentRoom: string, currentPlayer: string}): void {
+    const room = this.rooms.get(payload.currentRoom);
+
     if (room) {
-      const player = room.players.find((p) => p.id === client.id);
+      const player = room.players.find((p) => p.name === payload.currentPlayer);
       if (player) {
         player.ready = true;
-        this.server.to(roomId).emit('playerReady', room.players);
+        client.join(room.id);
+        this.server.to(room.id).emit('playerReady', room.players);
         if (room.players.every((p) => p.ready)) {
           this.startCategorySelection(room);
         }
@@ -155,8 +155,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   private async startCategorySelection(room: Room): Promise<void> {
-    debugger;
-    console.debug('Peter, it is startCategorySelection!');
     room.categorySelectionIndex = 0;
     await this.loadCategories();
     this.server.to(room.id).emit('selectCategory', {
@@ -173,6 +171,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   ): void {
     const room = this.rooms.get(payload.roomId);
     if (room) {
+      client.join(room.id);
       room.selectedCategory = payload.categoryName;
       this.server.to(room.id).emit('selectDifficulty', {
         categoryName: room.selectedCategory,
@@ -211,6 +210,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   handleShowResultAfterLastReply(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
+      client.join(room.id);
       room.readyForNextQuestion++;
       if (room.readyForNextQuestion === room.players.length) {
         this.showResultAfterLastReply(room);
@@ -221,11 +221,12 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   @SubscribeMessage('submitAnswer')
   handleSubmitAnswer(
     client: Socket,
-    payload: { roomId: string; answerIndex: number },
+    payload: { roomId: string; answerIndex: number, currentPlayer: string },
   ): void {
     const room = this.rooms.get(payload.roomId);
     if (room && room.gameStarted) {
-      const player = room.players.find((p) => p.id === client.id);
+      client.join(room.id);
+      const player = room.players.find((p) => p.name === payload.currentPlayer);
       player.lastQuestionCorrect = false;
       const question = room.questions[room.currentQuestionIndex];
       if (player && question && !player.answered) {
@@ -257,6 +258,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   handleReadyForNextQuestion(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
+      client.join(roomId);
       room.readyForNextQuestion++;
       if (room.readyForNextQuestion === room.players.length) {
         room.currentQuestionIndex++;
@@ -280,6 +282,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   handleStartNewGame(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
+      client.join(roomId);
       room.players.forEach((p) => {
         p.ready = false;
         p.score = 0;
@@ -380,6 +383,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   handleGetGameState(client: Socket, roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
+      client.join(roomId);
       client.emit('gameStateUpdate', {
         players: room.players,
         currentQuestionIndex: room.currentQuestionIndex,
@@ -396,7 +400,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   handleDisconnect(client: Socket): void {
     console.log(`Client disconnected: ${client.id}`);
-    // Implementieren Sie hier die Logik zur Behandlung von Spieler-Disconnects
   }
 
 }

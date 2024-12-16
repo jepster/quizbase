@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
 const socket = io(process.env.SOCKET_URL, {
+    autoConnect: true,
     path: process.env.PATH,
     reconnection: true,
     reconnectionAttempts: Infinity,
@@ -230,14 +231,12 @@ window.joinRoom = function() {
 };
 
 window.playerReady = function() {
-    console.log('playerReady run');
-    console.log('currentRoom: ' + currentRoom);
-    socket.emit('playerReady', currentRoom);
+    socket.emit('playerReady', {currentRoom, currentPlayer});
 };
 
 window.submitAnswer = function(index) {
     lastSubmittedAnswer = index;
-    socket.emit('submitAnswer', { roomId: currentRoom, answerIndex: index });
+    socket.emit('submitAnswer', { roomId: currentRoom, answerIndex: index, currentPlayer: currentPlayer });
     document.getElementById('answer-status').textContent = 'Antwort gesendet. Warte auf die anderen Spieler:innen...';
     document.getElementById('options').innerHTML = '';
 };
@@ -377,26 +376,5 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
         socket.connect();
-        updateGameState();
     }
-});
-
-function updateGameState() {
-    if (currentRoom) {
-        socket.emit('getGameState', currentRoom);
-    }
-}
-
-socket.on('connect', () => {
-    console.log('Connected to server again');
-    updateGameState();
-});
-
-socket.on('disconnect', (reason) => {
-    console.log('Disconnected from server:', reason);
-});
-
-socket.on('reconnect', (attemptNumber) => {
-    console.log('Reconnected to server after', attemptNumber, 'attempts');
-    updateGameState();
 });
