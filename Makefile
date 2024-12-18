@@ -1,19 +1,22 @@
 deploy:
-	(cd client && rm .env && cp .env.dist .env && npm run build && cp dist/* ../)
+	(cd client && rm .env && cp .env.dist .env && npm run build && cp -r dist/* ../)
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
-	ssh -t root@104.248.132.247 "cd app && docker-compose down --remove-orphans"
-	ssh -t root@104.248.132.247 "cd app && docker volume rm mongodb_data" || true
+	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
+	ssh -t root@104.248.132.247 "cd app && docker-compose down"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
 	(cd client && rm .env && cp .env.local .env)
 
 deploy-with-dependencies:
+	(cd client && rm .env && cp .env.dist .env && npm run build && cp -r dist/* ../)
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp server/.env.dist server/.env"
-	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && docker-compose restart"
+	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
+	ssh -t root@104.248.132.247 "cd app && docker-compose down"
+	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 	(cd client && rm .env && cp .env.local .env)
 
 ssh:
@@ -46,6 +49,9 @@ mongodb-container-down:
 
 import-questions:
 	cd server && npm run build && node dist/cli.js perplexity-command --category "${category}"
+
+delete-database:
+	cd server && npm run build && node dist/cli.js delete-database-command
 
 mongodb-dump:
 	sudo rm -rf dump/quizbase

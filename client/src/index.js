@@ -68,7 +68,6 @@ socket.on('playerJoined', (data) => {
 });
 
 socket.on('playerReady', (data) => {
-    debugger;
     if (currentPlayer !== data.player) {
         showNotification(`${data.player} ist bereit zum Spielen.`);
     }

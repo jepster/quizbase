@@ -30,8 +30,6 @@ services:
     image: certbot/certbot
     volumes:
       - certbot-conf:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-#    command: certonly --webroot --webroot-path=/var/www/certbot --email peter.majmesku@gmail.com --agree-tos --no-eff-email -d mobilefish.de
 
   mongodb:
     image: mongo:latest

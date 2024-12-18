@@ -1,15 +1,22 @@
 import { Command, CommandRunner, Option } from 'nest-commander';
 import { OpenAI } from "openai";
 import {MongoClient, ObjectId} from 'mongodb';
+import {ConfigService} from "@nestjs/config";
+import { Injectable } from '@nestjs/common';
 
 // Run this command like this: node dist/main.js perplexity-command
 @Command({ name: 'perplexity-command', description: 'Imports questions from perplexity' })
 export class PerplexityCommand extends CommandRunner {
-    private readonly mongoUri = 'mongodb://root:example@localhost:27017';
     private readonly dbName = 'quizbase';
     private readonly collectionName = 'trivia_questions';
     private insertedCount = 0;
     private skippedCount = 0;
+    private readonly mongoUri = '';
+
+    constructor(private configService: ConfigService) {
+        super();
+        this.mongoUri = this.configService.get('DATABASE_URL');
+    }
 
     @Option({
         flags: '-c, --category [category]',
