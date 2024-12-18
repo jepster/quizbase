@@ -133,7 +133,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       client.join(payload.roomId);
       this.server
         .to(payload.roomId)
-        .emit('playerJoined', { players: room.players, roomId: room.id });
+        .emit('playerJoined', { players: room.players, roomId: room.id, player: player.name});
     }
   }
 
@@ -146,7 +146,8 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       if (player) {
         player.ready = true;
         client.join(room.id);
-        this.server.to(room.id).emit('playerReady', room.players);
+        this.server.to(room.id).emit('playerReady', {players: room.players, player: player.name});
+
         if (room.players.every((p) => p.ready)) {
           this.startCategorySelection(room);
         }

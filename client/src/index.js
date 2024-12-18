@@ -60,12 +60,19 @@ socket.on('error', (error) => {
 
 // Socket event handlers
 socket.on('playerJoined', (data) => {
+    if (currentPlayer !== data.player) {
+        showNotification(`${data.player} ist dem Raum beigetreten.`);
+    }
     updatePlayerList(data.players);
     document.getElementById('room-id-display').textContent = `Raumname: ${data.roomId}`;
 });
 
-socket.on('playerReady', (players) => {
-    updatePlayerList(players);
+socket.on('playerReady', (data) => {
+    debugger;
+    if (currentPlayer !== data.player) {
+        showNotification(`${data.player} ist bereit zum Spielen.`);
+    }
+    updatePlayerList(data.players);
 });
 
 socket.on('selectCategory', (data) => {
@@ -188,6 +195,24 @@ window.roomJoin = function() {
     document.getElementById('room-join').classList.remove('hidden');
 };
 
+window.showNotification = function(title, body) {
+    if (Notification.permission !== "granted") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification(title, {
+                    body: body,
+                    icon: "img/bell_icon.png"
+                });
+            }
+        });
+    } else {
+        new Notification(title, {
+            body: body,
+            icon: "img/bell_icon.png"
+        });
+    }
+}
+
 window.createRoom = function() {
     socket.emit('createRoom', (roomId) => {
         currentRoom = roomId;
@@ -203,29 +228,29 @@ window.createRoom = function() {
 window.joinRoomByLink = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('roomId');
-    const playerName = urlParams.get('playerName');
 
-    if (roomId && playerName) {
+    if (roomId) {
         localStorage.setItem('authToken', 'authenticated');
-        currentPlayer = playerName;
-        socket.emit('joinRoom', { roomId, playerName });
         currentRoom = roomId;
 
+        document.getElementById('room-id').classList.add('hidden');
         document.getElementById('login-form').classList.add('hidden');
-        document.getElementById('room-join').classList.add('hidden');
-        document.getElementById('waiting-room').classList.remove('hidden');
+        document.getElementById('room-join').classList.remove('hidden');
         document.getElementById('start').classList.add('hidden');
     } else {
-        console.error('Room ID and Player Name are required');
+        console.error('Room ID is required');
     }
 }
 
 window.joinRoom = function() {
-    const roomId = document.getElementById('room-id').value;
+    if (currentRoom === '') {
+        currentRoom = document.getElementById('room-id').value;
+    }
     const playerName = document.getElementById('player-name-join').value;
     currentPlayer = playerName;
+
+    const roomId = currentRoom;
     socket.emit('joinRoom', { roomId, playerName });
-    currentRoom = roomId;
     document.getElementById('room-join').classList.add('hidden');
     document.getElementById('waiting-room').classList.remove('hidden');
 };
@@ -266,7 +291,7 @@ window.selectDifficulty = function(difficulty) {
 function updatePlayerList(players) {
     const playerList = document.getElementById('player-list');
     playerList.innerHTML = players.map(p =>
-        `<li class="bg-orange-100 p-2 mt-2 mb-2 rounded-lg">${p.name} ${p.ready ? '✔️ (Ready to Rock!)' : ''}</li>`
+        `<li class="bg-orange-100 p-2 mt-2 mb-2 rounded-lg">${p.name} ${p.ready ? '✔️' : ''}</li>`
     ).join('');
 }
 
@@ -341,10 +366,7 @@ window.login = function() {
 
 window.shareOnWhatsApp = function() {
     const currentDomain = window.location.origin;
-    const roomId = currentRoom;
-    const randomUsername = 'User' + Math.floor(Math.random() * 1000);
-
-    const shareUrl = `${currentDomain}?roomId=${roomId}&playerName=${randomUsername}`;
+    const shareUrl = `${currentDomain}?roomId=${currentRoom}`;
     const encodedShareUrl = encodeURIComponent(shareUrl);
 
     const whatsappUrl = `https://wa.me/?text=Join%20my%20quiz%20game!%20${encodedShareUrl}`;
@@ -356,8 +378,7 @@ function checkAuthentication() {
     // Check for roomId and playerName in URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('roomId');
-    const playerName = urlParams.get('playerName');
-    if (roomId && playerName) {
+    if (roomId) {
         window.joinRoomByLink();
         return;
     }

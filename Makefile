@@ -4,9 +4,9 @@ deploy:
 	ssh root@104.248.132.247 "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
 	ssh -t root@104.248.132.247 "cd app && docker-compose down --remove-orphans"
+	ssh -t root@104.248.132.247 "cd app && docker volume rm mongodb_data" || true
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
-#	ssh -t root@104.248.132.247 "docker exec mongodb bash -c 'until mongosh --eval \"db.adminCommand({ ping: 1 })\" > /dev/null 2>&1; do sleep 1; done'"
-#	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
+	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
 	(cd client && rm .env && cp .env.local .env)
 
 deploy-with-dependencies:
@@ -26,8 +26,7 @@ start-server-dev:
 	cd server && npm run start:debug
 
 open-chrome-with-wsl-ip:
-	@IP=$$(ip addr show eth0 | grep "inet\b" | awk '{print $$2}' | cut -d/ -f1); \
-	explorer.exe "http://$$IP:9000"
+	explorer.exe "http://localhost:9000"
 
 # Questions DB
 #############
