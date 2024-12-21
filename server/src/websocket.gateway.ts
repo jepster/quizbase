@@ -155,6 +155,21 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
   }
 
+  @SubscribeMessage('reconnect')
+  reconnect(client: Socket, payload: {currentRoom: string}): void {
+    const room = this.rooms.get(payload.currentRoom);
+
+    if (room) {
+      this.server
+          .to(payload.currentRoom)
+          .emit('reconnected', { players: room.players});
+
+      if (room.players.every((p) => p.ready)) {
+        this.startCategorySelection(room);
+      }
+    }
+  }
+
   private async startCategorySelection(room: Room): Promise<void> {
     room.categorySelectionIndex = 0;
     await this.loadCategories();

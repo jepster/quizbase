@@ -44,6 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Socket event listeners
 socket.on('connect', () => {
     console.log('Connected to server');
+    if (currentRoom !== '' && currentPlayer !== '') {
+        socket.emit('reconnect', { currentRoom});
+    }
+});
+
+socket.on('reconnected', (data) => {
+    console.log('Reconnected with server');
+    if (currentRoom !== '' && currentPlayer !== '') {
+        updatePlayerList(data.players);
+    }
 });
 
 socket.on('connect_error', (error) => {
