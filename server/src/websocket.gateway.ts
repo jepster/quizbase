@@ -158,6 +158,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   @SubscribeMessage('reconnect')
   reconnect(client: Socket, payload: {currentRoom: string}): void {
     const room = this.rooms.get(payload.currentRoom);
+    client.join(room.id);
 
     if (room) {
       this.server

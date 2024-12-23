@@ -45,12 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
 socket.on('connect', () => {
     console.log('Connected to server');
     if (currentRoom !== '' && currentPlayer !== '') {
-        socket.emit('reconnect', { currentRoom});
+        socket.emit('reconnect', { currentRoom });
     }
 });
 
 socket.on('reconnected', (data) => {
-    console.log('Reconnected with server');
     if (currentRoom !== '' && currentPlayer !== '') {
         updatePlayerList(data.players);
     }
@@ -228,7 +227,6 @@ window.createRoom = function() {
         const playerName = document.getElementById('player-name-create').value;
         currentPlayer = playerName;
         socket.emit('joinRoom', { roomId, playerName });
-        currentRoom = roomId;
         document.getElementById('room-creation').classList.add('hidden');
         document.getElementById('waiting-room').classList.remove('hidden');
     });
@@ -403,8 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthentication();
 });
 
-document.addEventListener('visibilitychange', function() {
+window.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-        socket.connect();
+        if (currentRoom !== '' && currentPlayer !== '') {
+            socket.emit('reconnect', { currentRoom });
+        }
     }
 });
