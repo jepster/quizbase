@@ -285,6 +285,8 @@ window.startNewGame = function() {
 window.selectCategory = function(categoryName) {
     socket.emit('categorySelected', { roomId: currentRoom, categoryName });
     document.getElementById('category-selection').classList.add('hidden');
+    document.getElementById('category-name').innerHTML = categoryName;
+    document.getElementById('category-name').classList.remove('hidden');
 };
 
 window.selectDifficulty = function(difficulty) {
