@@ -27,7 +27,6 @@
                 <div class="animate-spin h-16 w-16 border-t-2 border-b-2 border-blue-500 rounded-full"></div>
             </div>
             <div id="category-selected" class="hidden"></div>
-            <div id="category-name" class="hidden"></div>
             <div id="category-subheadline" class="hidden"></div>
             <div id="difficulty-subheadline" class="hidden"></div>
             <div id="start" class="hidden">
@@ -45,6 +44,9 @@
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                         onclick="createRoom()">Raum erstellen
                 </button>
+                <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+                        onclick="createRoomByCustomCategory()">Raum aus eigener Kategorie erstellen
+                </button>
             </div>
             <div id="room-join" class="hidden">
                 <h2 class="text-2xl font-bold mb-4">Raum beitreten</h2>
@@ -54,6 +56,14 @@
                        placeholder="Dein Name">
                 <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                         onclick="joinRoom()">Party beitreten
+                </button>
+            </div>
+            <div id="category-creation" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Kategorie erstellen</h2>
+                <input id="category-name" class="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+                       placeholder="Kategoriename">
+                <button class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+                        onclick="emitCreateRoomByCustomCategory()">Erstellen
                 </button>
             </div>
             <div id="waiting-room" class="hidden">

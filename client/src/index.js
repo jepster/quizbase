@@ -232,6 +232,16 @@ window.createRoom = function() {
     });
 };
 
+window.createRoomByCustomCategory = function() {
+    document.getElementById('room-creation').classList.add('hidden');
+    document.getElementById('category-creation').classList.remove('hidden');
+}
+
+window.emitCreateRoomByCustomCategory = function() {
+    const categoryName = document.getElementById('category-name').value;
+    socket.emit('createRoomByCustomCategory', { categoryName });
+}
+
 window.joinRoomByLink = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('roomId');

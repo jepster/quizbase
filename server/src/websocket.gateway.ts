@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import {Collection, MongoClient} from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {PerplexityService} from "./perplexity.service";
 
 interface Room {
   id: string;
@@ -57,7 +58,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   private readonly dbName = 'quizbase';
   private readonly collectionName = 'trivia_questions';
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService, private perplexityService: PerplexityService) {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
@@ -197,6 +198,14 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
         difficulty: room.difficulty,
       });
     }
+  }
+
+  @SubscribeMessage('createRoomByCustomCategory')
+  createRoomByCustomCategory(
+      client: Socket,
+      payload: { categoryName: string }
+  ): void {
+    this.perplexityService.run(payload.categoryName);
   }
 
   private showResultAfterLastReply(room: Room): void {
