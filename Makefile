@@ -29,7 +29,8 @@ start-server-dev:
 	cd server && npm run start:debug
 
 open-chrome-with-wsl-ip:
-	explorer.exe "http://localhost:9000"
+	@IP=$$(ip addr show eth0 | grep "inet\b" | awk '{print $$2}' | cut -d/ -f1); \
+	explorer.exe "http://$$IP:9000"
 
 # Questions DB
 #############
