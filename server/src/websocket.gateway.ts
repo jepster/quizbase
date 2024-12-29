@@ -161,7 +161,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     const room = this.rooms.get(payload.currentRoom);
     client.join(room.id);
 
-    if (room) {
+    if (room && !room.gameStarted) {
       this.server
           .to(payload.currentRoom)
           .emit('reconnected', { players: room.players});
@@ -201,11 +201,12 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   @SubscribeMessage('createRoomByCustomCategory')
-  createRoomByCustomCategory(
+  async createRoomByCustomCategory(
       client: Socket,
       payload: { categoryName: string }
-  ): void {
-    this.perplexityService.run(payload.categoryName);
+  ): Promise<void> {
+    await this.perplexityService.run(payload.categoryName);
+    client.emit('categoryCreated');
   }
 
   private showResultAfterLastReply(room: Room): void {

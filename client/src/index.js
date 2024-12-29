@@ -232,15 +232,22 @@ window.createRoom = function() {
     });
 };
 
-window.createRoomByCustomCategory = function() {
-    document.getElementById('room-creation').classList.add('hidden');
+window.createCategory = function() {
+    document.getElementById('start').classList.add('hidden');
     document.getElementById('category-creation').classList.remove('hidden');
 }
 
-window.emitCreateRoomByCustomCategory = function() {
+window.submitCategory = function() {
+    document.getElementById('loading').classList.remove('hidden');
     const categoryName = document.getElementById('category-name').value;
     socket.emit('createRoomByCustomCategory', { categoryName });
 }
+
+socket.on('categoryCreated', () => {
+    document.getElementById('start').classList.remove('hidden');
+    document.getElementById('category-creation').classList.add('hidden');
+    document.getElementById('loading').classList.add('hidden');
+});
 
 window.joinRoomByLink = function() {
     const urlParams = new URLSearchParams(window.location.search);
