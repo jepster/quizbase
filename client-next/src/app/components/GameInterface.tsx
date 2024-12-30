@@ -26,6 +26,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
+  const [roomId, setRoomId] = useState<string>('');
 
   const gameStates = {
     start: 'start',
@@ -38,6 +39,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     game: 'game',
     results: 'results',
     categoryCreation: 'category-creation',
+    roomJoin: 'room-join',
   };
 
   useEffect(() => {
@@ -85,6 +87,10 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
 
   const handlePlayerReady = (data: { players: Array<{ name: string; ready: boolean }> }) => {
     setPlayers(data.players);
+    const allPlayersReady = data.players.every(player => player.ready);
+    if (allPlayersReady) {
+      setGameState(gameStates.categorySelection);
+    }
   };
 
   const handleSelectCategory = (data: { playerName: string, categories: string[] }) => {
@@ -159,13 +165,15 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
       showError('Es muss ein Name eingegeben werden.');
       return;
     }
-    if (socket) {
-      socket.emit('joinRoom', { roomId: room, playerName });
+    if (socket && roomId) {
+      socket.emit('joinRoom', { roomId, playerName });
+      setRoom(roomId);
+      setGameState(gameStates.waitingRoom);
     }
   };
 
   const playerReady = () => {
-    socket?.emit('playerReady', { currentRoom: room, currentPlayer: playerName });
+    socket?.emit('playerReady', { room, playerName });
   };
 
   const selectCategory = (category: string) => {
@@ -212,7 +220,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
       {gameState === gameStates.start && (
         <div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.waitingRoom)}>Quiz beitreten</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
         </div>
       )}
@@ -371,6 +379,31 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           </button>
         </div>
       )}
+
+      {gameState === gameStates.roomJoin && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Raum ID"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+          />
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Dein Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+          />
+          <button
+            className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+            onClick={joinRoom}
+          >
+            Party beitreten
+          </button>
+        </div>
+      )}
+
 
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">

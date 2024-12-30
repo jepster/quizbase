@@ -140,11 +140,10 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   @SubscribeMessage('playerReady')
-  handlePlayerReady(client: Socket, payload: {currentRoom: string, currentPlayer: string}): void {
-    const room = this.rooms.get(payload.currentRoom);
-
+  handlePlayerReady(client: Socket, payload: {room: string, playerName: string}): void {
+    const room = this.rooms.get(payload.room);
     if (room) {
-      const player = room.players.find((p) => p.name === payload.currentPlayer);
+      const player = room.players.find((p) => p.name === payload.playerName);
       if (player) {
         player.ready = true;
         client.join(room.id);
