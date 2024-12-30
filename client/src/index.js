@@ -279,7 +279,7 @@ window.joinRoom = function() {
     document.getElementById('waiting-room').classList.remove('hidden');
 };
 
-window.playerReady = function() {
+window.playerReady = function(currentRoom, currentPlayer) {
     socket.emit('playerReady', {currentRoom, currentPlayer});
 };
 
