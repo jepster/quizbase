@@ -16,7 +16,6 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
-  const [answers, setAnswers] = useState<string[]>([]);
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -26,7 +25,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
-
+  const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
 
   const gameStates = {
     start: 'start',
@@ -46,7 +45,6 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('playerReady', handlePlayerReady);
       socket.on('selectCategory', handleSelectCategory);
-      socket.on('categorySelected', handleCategorySelected);
       socket.on('selectDifficulty', handleSelectDifficulty);
       socket.on('newQuestion', handleNewQuestion);
       socket.on('answerRevealed', handleAnswerRevealed);
@@ -66,7 +64,6 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
         socket.off('playerJoined', handlePlayerJoined);
         socket.off('playerReady', handlePlayerReady);
         socket.off('selectCategory', handleSelectCategory);
-        socket.off('categorySelected', handleCategorySelected);
         socket.off('selectDifficulty', handleSelectDifficulty);
         socket.off('newQuestion', handleNewQuestion);
         socket.off('answerRevealed', handleAnswerRevealed);
@@ -99,13 +96,8 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     }
   };
 
-  const handleCategorySelected = (data: { categoryName: string, difficulty: string }) => {
+  const handleSelectDifficulty = (data: { playerName: string, categoryName: string, difficulty: string }) => {
     setCategory(data.categoryName);
-    setDifficulty(data.difficulty);
-    setGameState(gameStates.waitingRoom);
-  };
-
-  const handleSelectDifficulty = (data: { playerName: string }) => {
     if (data.playerName === playerName) {
       setGameState(gameStates.selectDifficulty);
     } else {
@@ -113,13 +105,14 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     }
   };
 
-  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number }) => {
+  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
     setQuestion(data.question);
     setOptions(data.options);
     setGameState(gameStates.game);
     setLastSubmittedAnswer(null);
     setCurrentQuestionIndex(prevIndex => prevIndex + 1);
     setTotalQuestions(data.totalQuestionsCount);
+    setDifficulty(data.difficulty);
   };
 
   const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
@@ -186,10 +179,12 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const submitAnswer = (index: number) => {
     setLastSubmittedAnswer(index.toString());
     socket?.emit('submitAnswer', { roomId: room, answerIndex: index, currentPlayer: playerName });
+    setAnswerSubmitted(true);
   };
 
   const readyForNextQuestion = () => {
     socket?.emit('readyForNextQuestion', room);
+    setAnswerSubmitted(false);
   };
 
   const startNewGame = () => {
@@ -216,9 +211,9 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
 
       {gameState === gameStates.start && (
         <div>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded" onClick={() => setGameState(gameStates.waitingRoom)}>Quiz beitreten</button>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.waitingRoom)}>Quiz beitreten</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
         </div>
       )}
 
@@ -287,6 +282,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
 
       {gameState === gameStates.game && (
         <div>
+          <h3>{category} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
           <h2 className="text-2xl font-bold mb-4">
             Frage {currentQuestionIndex}/{totalQuestions}: {question}
           </h2>
@@ -312,8 +308,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
                 korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
             ))}
           </div>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
-                  onClick={readyForNextQuestion}>Nächste Frage
+          <button
+            className={`bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4 ${!answerSubmitted ? 'opacity-50 cursor-not-allowed' : ''}\``}
+            onClick={readyForNextQuestion}
+            disabled={!answerSubmitted}
+          >Nächste Frage
           </button>
         </div>
       )}
