@@ -24,6 +24,8 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [totalQuestions, setTotalQuestions] = useState<number>(0);
 
 
   const gameStates = {
@@ -111,11 +113,13 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     }
   };
 
-  const handleNewQuestion = (data: { question: string; options: string[] }) => {
+  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number }) => {
     setQuestion(data.question);
     setOptions(data.options);
     setGameState(gameStates.game);
     setLastSubmittedAnswer(null);
+    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+    setTotalQuestions(data.totalQuestionsCount);
   };
 
   const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
@@ -283,7 +287,9 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
 
       {gameState === gameStates.game && (
         <div>
-          <h2 className="text-2xl font-bold mb-4">{question}</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            Frage {currentQuestionIndex}/{totalQuestions}: {question}
+          </h2>
           <div className="flex flex-wrap justify-center">
             {options.map((option, index) => (
               <button
@@ -302,10 +308,13 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-2">Punktestand</h3>
             {leaderboard.map((player, index) => (
-              <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
+              <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort
+                korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
             ))}
           </div>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4" onClick={readyForNextQuestion}>Nächste Frage</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
+                  onClick={readyForNextQuestion}>Nächste Frage
+          </button>
         </div>
       )}
 
@@ -334,10 +343,10 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           <div className="mb-8">
             <h3 className="text-xl font-bold mb-2">Fragen und Antworten</h3>
             {results.map((result, index) => (
-              <div key={index} className="mb-4">
-                <p className="font-bold">{result.question}</p>
-                <p>Richtige Antwort: {result.options[result.correctIndex]}</p>
-                <p>Erklärung: {result.explanation}</p>
+              <div key={index} className={`${index % 2 === 0 ? 'bg-green-100' : 'bg-red-100'} p-4 m-2 rounded-lg`}>
+                <h4 className="font-bold mb-2">{result.question}</h4>
+                <p className="font-semibold">Richtige Antwort: {result.options[result.correctIndex]}</p>
+                <p className="mt-2">Erklärung: {result.explanation}</p>
               </div>
             ))}
           </div>

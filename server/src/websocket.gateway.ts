@@ -65,7 +65,8 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   async loadCategories(): Promise<void> {
     try {
       const collection = await this.getMongoDbCollection();
-      this.categories = await collection.distinct('category');
+      const allCategories = await collection.distinct('category');
+      this.categories = allCategories.filter(category => category.length > 1);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -227,6 +228,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
         options: question.options,
         categoryName: room.selectedCategory,
         difficulty: room.difficulty,
+        totalQuestionsCount: room.questions.length
       });
     } else {
       this.endGame(room);
