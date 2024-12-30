@@ -18,9 +18,13 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [difficulty, setDifficulty] = useState<string>('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
+  const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
 
   const gameStates = {
     start: 'start',
@@ -31,7 +35,8 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     selectDifficulty: 'select-difficulty',
     selectDifficultyWaiting: 'select-difficulty-waiting',
     game: 'game',
-    results: 'results'
+    results: 'results',
+    categoryCreation: 'category-creation',
   };
 
   useEffect(() => {
@@ -45,6 +50,15 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
       socket.on('answerRevealed', handleAnswerRevealed);
       socket.on('gameEnded', handleGameEnded);
       socket.on('newGameStarted', handleNewGameStarted);
+      socket.on('gameEnded', (data) => {
+        setLeaderboard(data.leaderboard);
+        setResults(data.results);
+        setGameState(gameStates.results);
+      });
+      socket.on('categoryCreated', () => {
+        setIsLoading(false);
+        setGameState(gameStates.start);
+      });
 
       return () => {
         socket.off('playerJoined', handlePlayerJoined);
@@ -56,6 +70,8 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
         socket.off('answerRevealed', handleAnswerRevealed);
         socket.off('gameEnded', handleGameEnded);
         socket.off('newGameStarted', handleNewGameStarted);
+        socket.off('gameEnded');
+        socket.off('categoryCreated');
       };
     }
   }, [socket, playerName]);
@@ -181,6 +197,15 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     setIsModalOpen(true);
   };
 
+  const createCategory = () => {
+    if (newCategoryName.trim() === '') {
+      showError('Bitte gib einen Kategorienamen ein.');
+      return;
+    }
+    setIsLoading(true);
+    socket?.emit('createRoomByCustomCategory', { categoryName: newCategoryName });
+  };
+
   return (
     <div>
       <ErrorModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} errorMessage={errorMessage} />
@@ -189,6 +214,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
         <div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded" onClick={() => setGameState(gameStates.waitingRoom)}>Quiz beitreten</button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
         </div>
       )}
 
@@ -293,6 +319,54 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             ))}
           </div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={startNewGame}>Neues Spiel starten</button>
+        </div>
+      )}
+
+      {gameState === gameStates.results && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Spielergebnisse</h2>
+          <div className="mb-8">
+            <h3 className="text-xl font-bold mb-2">Endstand</h3>
+            {leaderboard.map((player, index) => (
+              <p key={index}>{player.name}: {player.score} Punkte</p>
+            ))}
+          </div>
+          <div className="mb-8">
+            <h3 className="text-xl font-bold mb-2">Fragen und Antworten</h3>
+            {results.map((result, index) => (
+              <div key={index} className="mb-4">
+                <p className="font-bold">{result.question}</p>
+                <p>Richtige Antwort: {result.options[result.correctIndex]}</p>
+                <p>Erklärung: {result.explanation}</p>
+              </div>
+            ))}
+          </div>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={startNewGame}>Neues Spiel starten</button>
+        </div>
+      )}
+
+      {gameState === gameStates.categoryCreation && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Kategorie erstellen</h2>
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Kategoriename"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+          />
+          <button
+            className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+            onClick={createCategory}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Wird erstellt...' : 'Erstellen'}
+          </button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-pink-500"></div>
         </div>
       )}
     </div>
