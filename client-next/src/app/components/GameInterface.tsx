@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
+import ErrorModal from "@/app/components/ErrorModal";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -14,6 +15,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [options, setOptions] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>('start');
+  const [difficulty, setDifficulty] = useState<string>('');
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const gameStates = {
     start: 'start',
@@ -22,6 +28,9 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     waitingRoom: 'waiting-room',
     game: 'game',
     roomCreation: 'room-creation',
+    selectDifficulty: 'select-difficulty',
+    selectDifficultyWaiting: 'select-difficulty-waiting',
+    newQuestion: 'new-question',
   }
 
   useEffect(() => {
@@ -40,10 +49,22 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
         } else {
           setGameState(gameStates.categorySelectionWaiting);}
       });
+      socket.on('selectDifficulty', (data) => {
+        if (data.playerName === playerName) {
+          setGameState(gameStates.selectDifficulty);
+        } else {
+          setGameState(gameStates.selectDifficultyWaiting);
+        }
+      });
+      socket.on('newQuestion', (data) => {
+        setGameState(gameStates.newQuestion);
+      });
+      socket.on('answerRevealed', (data) => {
+      });
 
       return () => {
-        socket.off('playerJoined', handlePlayerJoined);
-        socket.off('newQuestion', handleNewQuestion);
+        // socket.off('playerJoined', handlePlayerJoined);
+        // socket.off('newQuestion', handleNewQuestion);
         // Remove other event listeners
       };
     }
@@ -92,10 +113,31 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     }
   });
 
-  // Implement other game logic functions here
+  const selectDifficulty = ((difficulty: string) => {
+    if (socket) {
+      setDifficulty(difficulty);
+      socket.emit('difficultySelected', { roomId: room, difficulty: difficulty });
+    }
+  });
+
+  const submitAnswer = ((answerIndex: string) => {
+    if (socket) {
+      socket.emit('submitAnswer', { roomId: room, answerIndex: answerIndex, currentPlayer: playerName });
+    }
+  });
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setIsModalOpen(true);
+  };
 
   return (
     <div>
+      <ErrorModal
+        isOpen={isModalOpen}
+        closeModal={() => setIsModalOpen(false)}
+        errorMessage={errorMessage}
+      />
       {gameState === gameStates.start && (
         <div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
@@ -118,13 +160,17 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             placeholder="Dein Name"
             onChange={(e) => {
               if (e.target.value.length > 0) {
-                console.log('player name: ' + e.target.value);
-                setPlayerName(e.target.value)}
+                setPlayerName(e.target.value)
               }
-            }
+            }}
           />
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                   onClick={() => {
+                    if (playerName === '') {
+                      showError('Es muss ein Name eingegeben werden.')
+                      return;
+                    }
+
                     if (socket) {
                       socket.emit('createRoom', (roomId) => {
                         setRoom(roomId);
@@ -171,10 +217,35 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
       )}
       {gameState === gameStates.categorySelectionWaiting && (
         <div>
-          <h2 className="text-2xl font-bold mb-4">Wähle eine Kategorie</h2>
+          <h2 className="text-2xl font-bold mb-4">{playerName} wählt eine Kategorie</h2>
+        </div>
+      )}
+      {gameState === gameStates.selectDifficulty && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Wähle den Schwierigkeitsgrad</h2>
           <p id="category-selector" className="text-xl font-bold mb-2">
-            {playerName} wählt eine Kategorie
+            {playerName}, deine Auswahl:
           </p>
+          <div id="category-buttons" className="flex flex-wrap justify-center"></div>
+          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded"
+                  onClick={() => selectDifficulty('high')}>Schwer
+          </button>
+          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded"
+                  onClick={() => selectDifficulty('low')}>Leicht
+          </button>
+        </div>
+      )}
+      {gameState === gameStates.selectDifficultyWaiting && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">{playerName} wählt den Schwierigkeitsgrad</h2>
+        </div>
+      )}
+      {gameState === gameStates.newQuestion && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4">{question}</h2>
+          {answers.map((answer, index) =>
+            <button key={index} className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onClick={() => {submitAnswer(index)}}>{answer}</button>
+          )}
         </div>
       )}
     </div>
