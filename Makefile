@@ -23,7 +23,7 @@ ssh:
 	ssh root@104.248.132.247
 
 start-client-dev:
-	cd client && npm start
+	cd client-next && npm run dev
 
 start-server-dev:
 	cd server && npm run start:debug
@@ -62,4 +62,4 @@ mongodb-restore:
 	docker exec -it ${PROJECT_NAME}_mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase
 
 dev:
-	concurrently "cd client && npm start" "cd server && npm run --inspect-brk start:debug" "docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d" "make open-chrome-with-wsl-ip"
+	concurrently "cd client-next && npm run dev" "cd server && npm run --inspect-brk start:debug" "docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d" "make open-chrome-with-wsl-ip"

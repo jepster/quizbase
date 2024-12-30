@@ -21,14 +21,13 @@ export default function Home() {
     <div className="h-screen flex justify-center">
       <Head>
         <title>QuizMaster: Fun Quizzes for Your Spare Time!</title>
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
       </Head>
-      <div className="flex-col">
-        <div className="bg-white w-11/12 md:w-3/4 lg:w-3/4 xl:w-3/4 p-6 rounded-lg shadow-lg flex-grow mx-auto mt-10">
+      <div className="flex-col w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div className="bg-white w-full p-6 rounded-lg shadow-lg flex-grow mx-auto mt-10">
           {!isAuthenticated ? (
-            <LoginForm setIsAuthenticated={setIsAuthenticated} />
+            <LoginForm setIsAuthenticated={setIsAuthenticated}/>
           ) : (
-            <GameInterface socket={socket} />
+            <GameInterface socket={socket}/>
           )}
         </div>
       </div>
