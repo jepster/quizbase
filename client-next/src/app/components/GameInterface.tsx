@@ -16,7 +16,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
-  const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<string | null>(null);
+  const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [newCategoryName, setNewCategoryName] = useState<string>('');
@@ -27,6 +27,8 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
   const [roomId, setRoomId] = useState<string>('');
+  const [explanation, setExplanation] = useState<string>('');
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
 
   const gameStates = {
     start: 'start',
@@ -119,9 +121,14 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     setCurrentQuestionIndex(prevIndex => prevIndex + 1);
     setTotalQuestions(data.totalQuestionsCount);
     setDifficulty(data.difficulty);
+    setIsAnswerCorrect(false);
   };
 
   const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
+    setExplanation(data.explanation);
+    if (data.leaderboard[0].lastQuestionCorrect) {
+      setIsAnswerCorrect(true);
+    }
     setLeaderboard(data.leaderboard);
   };
 
@@ -185,7 +192,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   };
 
   const submitAnswer = (index: number) => {
-    setLastSubmittedAnswer(index.toString());
+    setLastSubmittedAnswer(index);
     socket?.emit('submitAnswer', { roomId: room, answerIndex: index, currentPlayer: playerName });
     setAnswerSubmitted(true);
   };
@@ -306,8 +313,17 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
               </button>
             ))}
           </div>
+
           {lastSubmittedAnswer !== null && (
-            <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
+            <>
+              {!isAnswerCorrect && (
+                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">{explanation}</div>
+              )}
+              {isAnswerCorrect && (
+                <div className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">{explanation}</div>
+              )}
+              <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
+            </>
           )}
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-2">Punktestand</h3>
