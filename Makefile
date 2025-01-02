@@ -2,7 +2,7 @@ deploy:
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=client-next/.env.local --exclude=client-next/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
 	ssh root@104.248.132.247 "cd app && cp client-next/.env.production client-next/.env"
-#	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
+	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
 	ssh -t root@104.248.132.247 "cd app && docker-compose down"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
