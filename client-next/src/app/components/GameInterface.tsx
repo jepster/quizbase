@@ -305,7 +305,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             {options.map((option, index) => (
               <button
                 key={index}
-                className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded ${lastSubmittedAnswer === index.toString() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded ${lastSubmittedAnswer?.toString() === index.toString() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => submitAnswer(index)}
                 disabled={lastSubmittedAnswer !== null}
               >

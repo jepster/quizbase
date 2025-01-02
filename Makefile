@@ -1,23 +1,20 @@
 deploy:
-	(cd client && rm .env && cp .env.dist .env && npm run build && cp -r dist/* ../)
-	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
-	ssh root@104.248.132.247 "cd app && cp client/.env.dist client/.env"
+	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=client-next/.env.local --exclude=client-next/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
-	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
+	ssh root@104.248.132.247 "cd app && cp client-next/.env.production client-next/.env"
+#	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
 	ssh -t root@104.248.132.247 "cd app && docker-compose down"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 	ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
-	(cd client && rm .env && cp .env.local .env)
 
 deploy-with-dependencies:
-	(cd client && rm .env && cp .env.dist .env && npm run build && cp -r dist/* ../)
+	(cd client-next && npm run build)
 	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp client/.env.dist client/.env"
 	ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp server/.env.dist server/.env"
 	ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
 	ssh -t root@104.248.132.247 "cd app && docker-compose down"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
-	(cd client && rm .env && cp .env.local .env)
 
 ssh:
 	ssh root@104.248.132.247
