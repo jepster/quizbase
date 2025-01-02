@@ -317,11 +317,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           {lastSubmittedAnswer !== null && (
             <>
               {!isAnswerCorrect && (
-                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">{explanation}</div>
+                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort falsch.</div>
               )}
-              {isAnswerCorrect && (
-                <div className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">{explanation}</div>
-              )}
+              <div className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
+                Antwort: {explanation}</div>
+
               <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
             </>
           )}
