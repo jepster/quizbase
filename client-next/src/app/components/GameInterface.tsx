@@ -221,19 +221,19 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
   };
 
   return (
-    <div>
+    <>
       <ErrorModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} errorMessage={errorMessage} />
 
       {gameState === gameStates.start && (
-        <div>
+        <>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.roomCreation && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
@@ -242,11 +242,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             onChange={(e) => setPlayerName(e.target.value)}
           />
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.waitingRoom && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Warteraum</h2>
           <h3 className="text-xl font-bold mb-2">Raumname: {room}</h3>
           <ul className="list-none p-0">
@@ -257,11 +257,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             ))}
           </ul>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={playerReady}>Bereit</button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.categorySelection && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Wähle eine Kategorie</h2>
           <p className="text-xl font-bold mb-2">{playerName}, wähle eine Kategorie:</p>
           <div className="flex flex-wrap justify-center">
@@ -269,34 +269,34 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
               <button key={index} className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded" onClick={() => selectCategory(cat)}>{cat}</button>
             ))}
           </div>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.categorySelectionWaiting && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Warte auf Kategorieauswahl</h2>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.selectDifficulty && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Wähle den Schwierigkeitsgrad</h2>
           <p className="text-xl font-bold mb-2">{playerName}, deine Auswahl:</p>
           <div className="flex flex-wrap justify-center">
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onClick={() => selectDifficulty('high')}>Schwer</button>
             <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded" onClick={() => selectDifficulty('low')}>Leicht</button>
           </div>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.selectDifficultyWaiting && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Warte auf Schwierigkeitsauswahl</h2>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.game && (
-        <div>
+        <>
           <h3>{category} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
           <h2 className="text-2xl font-bold mb-4">
             Frage {currentQuestionIndex}/{totalQuestions}: {question}
@@ -319,30 +319,34 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
               {!isAnswerCorrect && (
                 <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort falsch.</div>
               )}
-              <div className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
+              <div id="explanation" className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
                 Antwort: {explanation}</div>
 
               <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
             </>
           )}
-          <div className="mt-8">
-            <h3 className="text-xl font-bold mb-2">Punktestand</h3>
-            {leaderboard.map((player, index) => (
-              <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort
-                korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
-            ))}
-          </div>
+          {leaderboard.length !== 0 && (
+            <>
+              <div className="mt-8">
+                <h3 className="text-xl font-bold mb-2">Punktestand</h3>
+                {leaderboard.map((player, index) => (
+                  <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort
+                    korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
+                ))}
+              </div>
+            </>
+          )}
           <button
             className={`bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4 ${!answerSubmitted ? 'opacity-50 cursor-not-allowed' : ''}\``}
             onClick={readyForNextQuestion}
             disabled={!answerSubmitted}
           >Nächste Frage
           </button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.results && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Spielergebnisse</h2>
           <div className="mb-8">
             <h3 className="text-xl font-bold mb-2">Endstand</h3>
@@ -351,11 +355,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             ))}
           </div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={startNewGame}>Neues Spiel starten</button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.results && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Spielergebnisse</h2>
           <div className="mb-8">
             <h3 className="text-xl font-bold mb-2">Endstand</h3>
@@ -374,11 +378,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
             ))}
           </div>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={startNewGame}>Neues Spiel starten</button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.categoryCreation && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Kategorie erstellen</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
@@ -393,11 +397,11 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           >
             {isLoading ? 'Wird erstellt...' : 'Erstellen'}
           </button>
-        </div>
+        </>
       )}
 
       {gameState === gameStates.roomJoin && (
-        <div>
+        <>
           <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
@@ -417,7 +421,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           >
             Party beitreten
           </button>
-        </div>
+        </>
       )}
 
 
@@ -426,6 +430,6 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-pink-500"></div>
         </div>
       )}
-    </div>
+    </>
   );
 }
