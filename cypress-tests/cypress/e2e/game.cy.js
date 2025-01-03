@@ -12,6 +12,7 @@ describe('template spec', () => {
   })
   it('Check necessary buttons', () => {
     cy.visit('http://172.17.30.97:9000/')
+    cy.contains('a', 'Zur Startseite').should('exist')
     cy.contains('Login')
         .parent()
         .find('button')
@@ -24,6 +25,7 @@ describe('template spec', () => {
   })
   it('Play singleplayer game', () => {
     cy.visit('http://172.17.30.97:9000/')
+    cy.contains('a', 'Zur Startseite').should('exist')
     cy.contains('Login')
         .parent()
         .find('button')

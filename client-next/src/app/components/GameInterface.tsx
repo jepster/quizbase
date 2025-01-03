@@ -4,10 +4,12 @@ import ErrorModal from "@/app/components/ErrorModal";
 
 interface GameInterfaceProps {
   socket: Socket | null;
+  gameState: string;
+  setGameState: React.Dispatch<React.SetStateAction<string>>;
+  resetGame: () => void;
 }
 
-export default function GameInterface({ socket }: GameInterfaceProps) {
-  const [gameState, setGameState] = useState<string>('start');
+export default function GameInterface({ socket, gameState, setGameState }: GameInterfaceProps) {
   const [room, setRoom] = useState<string>('');
   const [playerName, setPlayerName] = useState<string>('');
   const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
@@ -250,7 +252,7 @@ export default function GameInterface({ socket }: GameInterfaceProps) {
     }
   };
 
-  const fallbackCopyTextToClipboard = (text) => {
+  const fallbackCopyTextToClipboard = (text: string) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
