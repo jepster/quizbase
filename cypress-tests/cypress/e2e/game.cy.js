@@ -34,7 +34,9 @@ describe('template spec', () => {
     cy.get('input')
         .type('Peter');
     cy.get('button').click()
-    cy.get('button').click()
+    cy.contains('button', 'Auf WhatsApp teilen').should('exist')
+    cy.contains('button', 'Link kopieren').should('exist')
+    cy.contains('button', 'Bereit').click()
     // Select the first game category
     cy.get('button').first().click()
     cy.contains('button', 'Leicht').click()
