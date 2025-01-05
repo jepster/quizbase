@@ -5,12 +5,13 @@ import ErrorModal from "@/app/components/ErrorModal";
 interface GameInterfaceProps {
   socket: Socket | null;
   gameState: string;
+  roomId: string;
   setGameState: React.Dispatch<React.SetStateAction<string>>;
+  setRoomId: React.Dispatch<React.SetStateAction<string>>;
   resetGame: () => void;
 }
 
-export default function GameInterface({ socket, gameState, setGameState }: GameInterfaceProps) {
-  const [room, setRoom] = useState<string>('');
+export default function GameInterface({ socket, gameState, setGameState, setRoomId, roomId }: GameInterfaceProps) {
   const [playerName, setPlayerName] = useState<string>('');
   const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
   const [question, setQuestion] = useState<string>('');
@@ -28,7 +29,6 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
-  const [roomId, setRoomId] = useState<string>('');
   const [explanation, setExplanation] = useState<string>('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
@@ -45,6 +45,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
     results: 'results',
     categoryCreation: 'category-creation',
     roomJoin: 'room-join',
+    roomJoinByLink: 'room-join-by-link',
   };
 
   useEffect(() => {
@@ -164,7 +165,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
     }
     if (socket) {
       socket.emit('createRoom', (roomId: string) => {
-        setRoom(roomId);
+        setRoomId(roomId);
         socket.emit('joinRoom', { roomId, playerName });
       });
     }
@@ -176,37 +177,37 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
       return;
     }
     if (socket && roomId) {
-      socket.emit('joinRoom', { roomId, playerName });
-      setRoom(roomId);
+      socket.emit('joinRoom', { roomId: roomId, playerName });
+      setRoomId(roomId);
       setGameState(gameStates.waitingRoom);
     }
   };
 
   const playerReady = () => {
-    socket?.emit('playerReady', { room, playerName });
+    socket?.emit('playerReady', { roomId: roomId, playerName });
   };
 
   const selectCategory = (category: string) => {
-    socket?.emit('categorySelected', { roomId: room, categoryName: category });
+    socket?.emit('categorySelected', { roomId: roomId, categoryName: category });
   };
 
   const selectDifficulty = (difficulty: string) => {
-    socket?.emit('difficultySelected', { roomId: room, difficulty });
+    socket?.emit('difficultySelected', { roomId: roomId, difficulty });
   };
 
   const submitAnswer = (index: number) => {
     setLastSubmittedAnswer(index);
-    socket?.emit('submitAnswer', { roomId: room, answerIndex: index, currentPlayer: playerName });
+    socket?.emit('submitAnswer', { roomId: roomId, answerIndex: index, currentPlayer: playerName });
     setAnswerSubmitted(true);
   };
 
   const readyForNextQuestion = () => {
-    socket?.emit('readyForNextQuestion', room);
+    socket?.emit('readyForNextQuestion', roomId);
     setAnswerSubmitted(false);
   };
 
   const startNewGame = () => {
-    socket?.emit('startNewGame', room);
+    socket?.emit('startNewGame', roomId);
   };
 
   const showError = (message: string) => {
@@ -225,7 +226,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
 
   const shareOnWhatsApp = () => {
     const currentDomain = window.location.origin;
-    const shareUrl = `${currentDomain}?roomId=${room}`;
+    const shareUrl = `${currentDomain}?roomId=${roomId}`;
     const encodedShareUrl = encodeURIComponent(shareUrl);
 
     const whatsappUrl = `https://wa.me/?text=Join%20my%20quiz%20game!%20${encodedShareUrl}`;
@@ -235,7 +236,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
 
   const copyToClipboard = () => {
     const currentDomain = window.location.origin;
-    const shareUrl = `${currentDomain}?roomId=${room}`;
+    const shareUrl = `${currentDomain}?roomId=${roomId}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareUrl)
@@ -303,7 +304,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
       {gameState === gameStates.waitingRoom && (
         <>
           <h2 className="text-2xl font-bold mb-4">Warteraum</h2>
-          <h3 className="text-xl font-bold mb-2">Raumname: {room}</h3>
+          <h3 className="text-xl font-bold mb-2">Raumname: {roomId}</h3>
           <ul className="list-none p-0">
             {players.map((player, index) => (
               <li key={index} className="bg-orange-100 p-2 mt-2 mb-2 rounded-lg">
@@ -478,6 +479,24 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
           />
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Dein Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+          />
+          <button
+            className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+            onClick={joinRoom}
+          >
+            Party beitreten
+          </button>
+        </>
+      )}
+
+      {gameState === gameStates.roomJoinByLink && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Dein Name"

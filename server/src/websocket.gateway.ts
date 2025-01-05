@@ -140,8 +140,8 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   @SubscribeMessage('playerReady')
-  handlePlayerReady(client: Socket, payload: {room: string, playerName: string}): void {
-    const room = this.rooms.get(payload.room);
+  handlePlayerReady(client: Socket, payload: {roomId: string, playerName: string}): void {
+    const room = this.rooms.get(payload.roomId);
     if (room) {
       const player = room.players.find((p) => p.name === payload.playerName);
       if (player) {
@@ -188,6 +188,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     payload: { roomId: string; categoryName: string },
   ): void {
     const room = this.rooms.get(payload.roomId);
+    debugger;
     if (room) {
       client.join(room.id);
       room.selectedCategory = payload.categoryName;

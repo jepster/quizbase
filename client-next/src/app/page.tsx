@@ -6,12 +6,15 @@ import LoginForm from '@/app/components/LoginForm';
 import GameInterface from '@/app/components/GameInterface';
 import { useSocket } from '@/app/hooks/useSocket';
 import Link from 'next/link';
+import useJoinRoomByLink from "@/app/hooks/useJoinRoomByLink";
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const socket = useSocket();
 
   const [gameState, setGameState] = useState<string>('start');
+  const [roomId, setRoomId] = useState<string>('');
+  useJoinRoomByLink(setGameState, setRoomId);
 
   const resetGame = () => {
     setGameState('start');
@@ -45,9 +48,13 @@ export default function Home() {
           {!isAuthenticated ? (
             <LoginForm setIsAuthenticated={setIsAuthenticated}/>
           ) : (
-            <GameInterface socket={socket}   gameState={gameState}
+            <GameInterface socket={socket}
+                           gameState={gameState}
                            setGameState={setGameState}
-                           resetGame={resetGame}/>
+                           resetGame={resetGame}
+                           setRoomId={setRoomId}
+                           roomId={roomId}
+            />
           )}
         </div>
       </div>
