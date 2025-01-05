@@ -32,6 +32,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [explanation, setExplanation] = useState<string>('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
+  const [allPlayersAnsweredQuestion, setAllPlayersAnsweredQuestion] = useState<boolean>(false);
 
   const gameStates = {
     start: 'start',
@@ -126,14 +127,16 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     setTotalQuestions(data.totalQuestionsCount);
     setDifficulty(data.difficulty);
     setIsAnswerCorrect(false);
+    setAllPlayersAnsweredQuestion(false);
   };
 
-  const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
+  const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, allPlayersAnsweredQuestion: boolean, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
     setExplanation(data.explanation);
     if (data.leaderboard[0].lastQuestionCorrect) {
       setIsAnswerCorrect(true);
     }
     setLeaderboard(data.leaderboard);
+    setAllPlayersAnsweredQuestion(data.allPlayersAnsweredQuestion);
   };
 
   const handleGameEnded = (data: { leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }>, results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }> }) => {
@@ -395,15 +398,17 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
             ))}
           </div>
 
-          {lastSubmittedAnswer !== null && (
+          {(lastSubmittedAnswer !== null && !allPlayersAnsweredQuestion) && (
+            <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
+          )}
+
+          {(lastSubmittedAnswer !== null && allPlayersAnsweredQuestion) && (
             <>
               {!isAnswerCorrect && (
                 <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort falsch.</div>
               )}
               <div id="explanation" className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
                 Antwort: {explanation}</div>
-
-              <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
             </>
           )}
           {leaderboard.length !== 0 && (

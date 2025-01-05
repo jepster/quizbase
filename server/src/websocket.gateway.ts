@@ -22,6 +22,7 @@ interface Room {
   selectedCategory: string;
   readyForNextQuestion: number;
   difficulty: string;
+  allPlayersAnsweredQuestion: boolean;
 }
 
 interface Player {
@@ -112,6 +113,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       selectedCategory: '',
       readyForNextQuestion: 0,
       difficulty: '',
+      allPlayersAnsweredQuestion: false,
     });
     return roomId;
   }
@@ -188,7 +190,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     payload: { roomId: string; categoryName: string },
   ): void {
     const room = this.rooms.get(payload.roomId);
-    debugger;
     if (room) {
       client.join(room.id);
       room.selectedCategory = payload.categoryName;
@@ -219,16 +220,15 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   private askNextQuestion(room: Room): void {
     if (room.currentQuestionIndex < this.questionsNumberInGame) {
       const question = room.questions[room.currentQuestionIndex];
-      room.players.forEach(p => p.answered = false);
-      room.answersReceived = 0;
+      room.players.forEach((p) => (p.answered = false));
+      room.allPlayersAnsweredQuestion = false;
       room.readyForNextQuestion = 0;
-
       this.server.to(room.id).emit('newQuestion', {
         question: question.question,
         options: question.options,
         categoryName: room.selectedCategory,
         difficulty: room.difficulty,
-        totalQuestionsCount: room.questions.length
+        totalQuestionsCount: room.questions.length,
       });
     } else {
       this.endGame(room);
@@ -264,9 +264,8 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
           player.score += 1;
           player.lastQuestionCorrect = true;
         }
-        room.answersReceived++;
-
-        if (room.answersReceived === room.players.length) {
+        room.allPlayersAnsweredQuestion = room.players.every((p) => p.answered);
+        if (room.allPlayersAnsweredQuestion) {
           this.revealAnswer(room);
         }
       }
@@ -280,6 +279,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       explanation: question.explanation,
       options: question.options,
       leaderboard: room.players.sort((a, b) => b.score - a.score),
+      allPlayersAnsweredQuestion: room.allPlayersAnsweredQuestion,
     });
   }
 
