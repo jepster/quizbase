@@ -6,7 +6,8 @@ import LoginForm from '@/app/components/LoginForm';
 import GameInterface from '@/app/components/GameInterface';
 import { useSocket } from '@/app/hooks/useSocket';
 import Link from 'next/link';
-import useJoinRoomByLink from "@/app/hooks/useJoinRoomByLink";
+import { Suspense } from 'react';
+import JoinRoomByLink from "@/app/components/JoinRoomByLink";
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -14,7 +15,6 @@ export default function Home() {
 
   const [gameState, setGameState] = useState<string>('start');
   const [roomId, setRoomId] = useState<string>('');
-  useJoinRoomByLink(setGameState, setRoomId);
 
   const resetGame = () => {
     setGameState('start');
@@ -29,6 +29,9 @@ export default function Home() {
 
   return (
     <div className="h-screen flex justify-center">
+      <Suspense fallback={<div>Loading...</div>}>
+        <JoinRoomByLink setGameState={setGameState} setRoomId={setRoomId} />
+      </Suspense>
       <Head>
         <title>QuizMaster: Fun Quizzes for Your Spare Time!</title>
       </Head>

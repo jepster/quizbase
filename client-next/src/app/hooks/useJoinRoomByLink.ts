@@ -1,7 +1,13 @@
+'use client';
+
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Dispatch, SetStateAction } from 'react';
 
-export default function useJoinRoomByLink(setGameState: (value: (((prevState: string) => string) | string)) => void, setRoomId: (value: (((prevState: string) => string) | string)) => void) {
+export default function useJoinRoomByLink(
+  setGameState: Dispatch<SetStateAction<string>>,
+  setRoomId: Dispatch<SetStateAction<string>>
+) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
