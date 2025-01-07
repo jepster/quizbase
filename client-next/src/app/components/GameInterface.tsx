@@ -224,7 +224,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       return;
     }
     setIsLoading(true);
-    socket?.emit('createRoomByCustomCategory', { categoryName: newCategoryName });
+    socket?.emit('createCustomCategory', { categoryName: newCategoryName });
   };
 
   const shareOnWhatsApp = () => {

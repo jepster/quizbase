@@ -8,6 +8,7 @@ import { useSocket } from '@/app/hooks/useSocket';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import JoinRoomByLink from "@/app/components/JoinRoomByLink";
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);

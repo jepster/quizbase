@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { WebsocketGateway } from './websocket.gateway';
-import { PerplexityService } from "./perplexity.service";
+import { SynchronousQuizGateway } from './synchronous-quiz.gateway';
+import { AsynchronousQuizGateway } from './asynchronous-quiz.gateway';
+import { PerplexityService } from './perplexity.service';
 
 @Module({
   imports: [
@@ -10,6 +11,10 @@ import { PerplexityService } from "./perplexity.service";
     }),
   ],
   controllers: [],
-  providers: [WebsocketGateway, PerplexityService],
+  providers: [
+    SynchronousQuizGateway,
+    AsynchronousQuizGateway,
+    PerplexityService,
+  ],
 })
 export class AppModule {}

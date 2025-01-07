@@ -3,13 +3,13 @@ import {
   SubscribeMessage,
   WebSocketServer,
   OnGatewayConnection,
-  OnGatewayDisconnect
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import {Collection, MongoClient} from 'mongodb';
+import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {PerplexityService} from "./perplexity.service";
+import { PerplexityService } from './perplexity.service';
 
 interface Room {
   id: string;
@@ -20,6 +20,19 @@ interface Room {
   answersReceived: number;
   categorySelectionIndex: number;
   selectedCategory: string;
+  readyForNextQuestion: number;
+  difficulty: string;
+  allPlayersAnsweredQuestion: boolean;
+}
+
+interface SinglePlayerQuiz {
+  id: string;
+  category: string;
+  questions: Question[];
+  currentQuestionIndex: number;
+  gameStarted: boolean;
+  answersReceived: number;
+  categorySelectionIndex: number;
   readyForNextQuestion: number;
   difficulty: string;
   allPlayersAnsweredQuestion: boolean;
@@ -45,13 +58,16 @@ interface Question {
 @WebSocketGateway({
   cors: { origin: '*' },
   pingInterval: 10000,
-  pingTimeout: 5000
+  pingTimeout: 5000,
 })
-export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class SynchronousQuizGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
   private rooms: Map<string, Room> = new Map();
+  private singlePlayerQuizzes: Map<string, SinglePlayerQuiz> = new Map();
   private categories: string[];
   private questionsNumberInGame: number = 10;
 
@@ -59,7 +75,10 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   private readonly dbName = 'quizbase';
   private readonly collectionName = 'trivia_questions';
 
-  constructor(private configService: ConfigService, private perplexityService: PerplexityService) {
+  constructor(
+    private configService: ConfigService,
+    private perplexityService: PerplexityService,
+  ) {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
@@ -67,7 +86,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     try {
       const collection = await this.getMongoDbCollection();
       const allCategories = await collection.distinct('category');
-      this.categories = allCategories.filter(category => category.length > 1);
+      this.categories = allCategories.filter((category) => category.length > 1);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -80,14 +99,12 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   ): Promise<void> {
     const room = this.rooms.get(payload.roomId);
     if (room) {
-      const category = this.categories.find(
-        (c) => c === room.selectedCategory,
-      );
+      const category = this.categories.find((c) => c === room.selectedCategory);
 
       room.difficulty = payload.difficulty;
 
-      let categoryName = category;
-      let roomDifficulty = room.difficulty;
+      const categoryName = category;
+      const roomDifficulty = room.difficulty;
 
       room.questions = await this.getQuestionsFromMongoDB(
         categoryName,
@@ -118,6 +135,27 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     return roomId;
   }
 
+  @SubscribeMessage('createSinglePlayerQuiz')
+  createSinglePlayerQuiz(
+    client: Socket,
+    payload: { category: string },
+  ): string {
+    const uniqueId = crypto.randomUUID();
+    this.singlePlayerQuizzes.set(uniqueId, {
+      id: uniqueId,
+      category: payload.category,
+      questions: [],
+      currentQuestionIndex: 0,
+      gameStarted: false,
+      answersReceived: 0,
+      categorySelectionIndex: 0,
+      readyForNextQuestion: 0,
+      difficulty: '',
+      allPlayersAnsweredQuestion: false,
+    });
+    return uniqueId;
+  }
+
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
     client: Socket,
@@ -135,21 +173,28 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       };
       room.players.push(player);
       client.join(payload.roomId);
-      this.server
-        .to(payload.roomId)
-        .emit('playerJoined', { players: room.players, roomId: room.id, player: player.name});
+      this.server.to(payload.roomId).emit('playerJoined', {
+        players: room.players,
+        roomId: room.id,
+        player: player.name,
+      });
     }
   }
 
   @SubscribeMessage('playerReady')
-  handlePlayerReady(client: Socket, payload: {roomId: string, playerName: string}): void {
+  handlePlayerReady(
+    client: Socket,
+    payload: { roomId: string; playerName: string },
+  ): void {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       const player = room.players.find((p) => p.name === payload.playerName);
       if (player) {
         player.ready = true;
         client.join(room.id);
-        this.server.to(room.id).emit('playerReady', {players: room.players, player: player.name});
+        this.server
+          .to(room.id)
+          .emit('playerReady', { players: room.players, player: player.name });
 
         if (room.players.every((p) => p.ready)) {
           this.startCategorySelection(room);
@@ -159,29 +204,19 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   @SubscribeMessage('reconnect')
-  reconnect(client: Socket, payload: {currentRoom: string}): void {
+  reconnect(client: Socket, payload: { currentRoom: string }): void {
     const room = this.rooms.get(payload.currentRoom);
     client.join(room.id);
 
     if (room && !room.gameStarted) {
       this.server
-          .to(payload.currentRoom)
-          .emit('reconnected', { players: room.players});
+        .to(payload.currentRoom)
+        .emit('reconnected', { players: room.players });
 
       if (room.players.every((p) => p.ready)) {
         this.startCategorySelection(room);
       }
     }
-  }
-
-  private async startCategorySelection(room: Room): Promise<void> {
-    room.categorySelectionIndex = 0;
-    await this.loadCategories();
-    this.server.to(room.id).emit('selectCategory', {
-      categories: this.categories,
-      playerIndex: room.categorySelectionIndex,
-      playerName: room.players[room.categorySelectionIndex].name,
-    });
   }
 
   @SubscribeMessage('categorySelected')
@@ -202,13 +237,115 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
   }
 
-  @SubscribeMessage('createRoomByCustomCategory')
-  async createRoomByCustomCategory(
-      client: Socket,
-      payload: { categoryName: string }
+  @SubscribeMessage('createCustomCategory')
+  async createCustomCategory(
+    client: Socket,
+    payload: { categoryName: string },
   ): Promise<void> {
     await this.perplexityService.run(payload.categoryName);
     client.emit('categoryCreated');
+  }
+
+  @SubscribeMessage('showResultAfterLastReply')
+  handleShowResultAfterLastReply(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      client.join(room.id);
+      room.readyForNextQuestion++;
+      if (room.readyForNextQuestion === room.players.length) {
+        this.showResultAfterLastReply(room);
+      }
+    }
+  }
+
+  @SubscribeMessage('submitAnswer')
+  handleSubmitAnswer(
+    client: Socket,
+    payload: { roomId: string; answerIndex: number; currentPlayer: string },
+  ): void {
+    const room = this.rooms.get(payload.roomId);
+    if (room && room.gameStarted) {
+      client.join(room.id);
+      const player = room.players.find((p) => p.name === payload.currentPlayer);
+      player.lastQuestionCorrect = false;
+      const question = room.questions[room.currentQuestionIndex];
+      if (player && question && !player.answered) {
+        player.answered = true;
+        if (payload.answerIndex === question.correctIndex) {
+          player.score += 1;
+          player.lastQuestionCorrect = true;
+        }
+        room.allPlayersAnsweredQuestion = room.players.every((p) => p.answered);
+        if (room.allPlayersAnsweredQuestion) {
+          this.revealAnswer(room);
+        }
+      }
+    }
+  }
+
+  @SubscribeMessage('readyForNextQuestion')
+  handleReadyForNextQuestion(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      client.join(roomId);
+      room.readyForNextQuestion++;
+      if (room.readyForNextQuestion === room.players.length) {
+        room.currentQuestionIndex++;
+        this.askNextQuestion(room);
+      }
+    }
+  }
+
+  @SubscribeMessage('startNewGame')
+  handleStartNewGame(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      client.join(roomId);
+      room.players.forEach((p) => {
+        p.ready = false;
+        p.score = 0;
+        p.answered = false;
+      });
+      room.currentQuestionIndex = 0;
+      room.gameStarted = false;
+      room.answersReceived = 0;
+      room.readyForNextQuestion = 0;
+      room.selectedCategory = '';
+      this.server.to(roomId).emit('newGameStarted', room.players);
+    }
+  }
+
+  @SubscribeMessage('getGameState')
+  handleGetGameState(client: Socket, roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      client.join(roomId);
+      client.emit('gameStateUpdate', {
+        players: room.players,
+        currentQuestionIndex: room.currentQuestionIndex,
+        gameStarted: room.gameStarted,
+        selectedCategory: room.selectedCategory,
+        difficulty: room.difficulty,
+      });
+    }
+  }
+
+  handleConnection(client: Socket): void {
+    console.log(`Client connected: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket): void {
+    console.log(`Client disconnected: ${client.id}`);
+  }
+
+  private async startCategorySelection(room: Room): Promise<void> {
+    room.categorySelectionIndex = 0;
+    await this.loadCategories();
+    this.server.to(room.id).emit('selectCategory', {
+      categories: this.categories,
+      playerIndex: room.categorySelectionIndex,
+      playerName: room.players[room.categorySelectionIndex].name,
+    });
   }
 
   private showResultAfterLastReply(room: Room): void {
@@ -235,43 +372,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
   }
 
-  @SubscribeMessage('showResultAfterLastReply')
-  handleShowResultAfterLastReply(client: Socket, roomId: string): void {
-    const room = this.rooms.get(roomId);
-    if (room) {
-      client.join(room.id);
-      room.readyForNextQuestion++;
-      if (room.readyForNextQuestion === room.players.length) {
-        this.showResultAfterLastReply(room);
-      }
-    }
-  }
-
-  @SubscribeMessage('submitAnswer')
-  handleSubmitAnswer(
-    client: Socket,
-    payload: { roomId: string; answerIndex: number, currentPlayer: string },
-  ): void {
-    const room = this.rooms.get(payload.roomId);
-    if (room && room.gameStarted) {
-      client.join(room.id);
-      const player = room.players.find((p) => p.name === payload.currentPlayer);
-      player.lastQuestionCorrect = false;
-      const question = room.questions[room.currentQuestionIndex];
-      if (player && question && !player.answered) {
-        player.answered = true;
-        if (payload.answerIndex === question.correctIndex) {
-          player.score += 1;
-          player.lastQuestionCorrect = true;
-        }
-        room.allPlayersAnsweredQuestion = room.players.every((p) => p.answered);
-        if (room.allPlayersAnsweredQuestion) {
-          this.revealAnswer(room);
-        }
-      }
-    }
-  }
-
   private revealAnswer(room: Room): void {
     const question = room.questions[room.currentQuestionIndex];
     this.server.to(room.id).emit('answerRevealed', {
@@ -283,19 +383,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     });
   }
 
-  @SubscribeMessage('readyForNextQuestion')
-  handleReadyForNextQuestion(client: Socket, roomId: string): void {
-    const room = this.rooms.get(roomId);
-    if (room) {
-      client.join(roomId);
-      room.readyForNextQuestion++;
-      if (room.readyForNextQuestion === room.players.length) {
-        room.currentQuestionIndex++;
-        this.askNextQuestion(room);
-      }
-    }
-  }
-
   private endGame(room: Room): void {
     const answeredQuestions = room.questions.slice(
       0,
@@ -305,25 +392,6 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       results: answeredQuestions,
       leaderboard: room.players.sort((a, b) => b.score - a.score),
     });
-  }
-
-  @SubscribeMessage('startNewGame')
-  handleStartNewGame(client: Socket, roomId: string): void {
-    const room = this.rooms.get(roomId);
-    if (room) {
-      client.join(roomId);
-      room.players.forEach((p) => {
-        p.ready = false;
-        p.score = 0;
-        p.answered = false;
-      });
-      room.currentQuestionIndex = 0;
-      room.gameStarted = false;
-      room.answersReceived = 0;
-      room.readyForNextQuestion = 0;
-      room.selectedCategory = '';
-      this.server.to(roomId).emit('newGameStarted', room.players);
-    }
   }
 
   private generateFunnyRoomName(): string {
@@ -367,20 +435,27 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     return db.collection(this.collectionName);
   }
 
-  private async getQuestionsFromMongoDB(category: string, difficulty: string): Promise<Question[]> {
+  private async getQuestionsFromMongoDB(
+    category: string,
+    difficulty: string,
+  ): Promise<Question[]> {
     try {
       const collection = await this.getMongoDbCollection();
-      const questions = await collection.aggregate([
-        { $match: { category: category, difficulty: difficulty } },
-        { $sample: { size: this.questionsNumberInGame } }
-      ]).toArray();
+      const questions = await collection
+        .aggregate([
+          { $match: { category: category, difficulty: difficulty } },
+          { $sample: { size: this.questionsNumberInGame } },
+        ])
+        .toArray();
 
-      const uniqueQuestions = this.removeDuplicates(questions.map(q => ({
-        question: q.question,
-        options: q.options,
-        correctIndex: q.correctIndex,
-        explanation: q.explanation
-      })));
+      const uniqueQuestions = this.removeDuplicates(
+        questions.map((q) => ({
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+        })),
+      );
 
       const shuffledQuestions = this.shuffleArray(uniqueQuestions);
 
@@ -393,7 +468,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   private removeDuplicates(questions: Question[]): Question[] {
     const seen = new Set();
-    return questions.filter(q => {
+    return questions.filter((q) => {
       const duplicate = seen.has(q.question);
       seen.add(q.question);
       return !duplicate;
@@ -407,28 +482,4 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     }
     return array;
   }
-
-  @SubscribeMessage('getGameState')
-  handleGetGameState(client: Socket, roomId: string): void {
-    const room = this.rooms.get(roomId);
-    if (room) {
-      client.join(roomId);
-      client.emit('gameStateUpdate', {
-        players: room.players,
-        currentQuestionIndex: room.currentQuestionIndex,
-        gameStarted: room.gameStarted,
-        selectedCategory: room.selectedCategory,
-        difficulty: room.difficulty
-      });
-    }
-  }
-
-  handleConnection(client: Socket): void {
-    console.log(`Client connected: ${client.id}`);
-  }
-
-  handleDisconnect(client: Socket): void {
-    console.log(`Client disconnected: ${client.id}`);
-  }
-
 }
