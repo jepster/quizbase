@@ -23,6 +23,9 @@ export default function QuizCategory() {
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
   const [singlePlayerQuizId, setSinglePlayerQuizId] = useState<string>('');
+  const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const gameStates = {
     start: 'start',
@@ -35,22 +38,26 @@ export default function QuizCategory() {
       socket.on('newQuestion', handleNewQuestion);
       socket.on('answerRevealed', handleAnswerRevealed);
       socket.on('gameEnded', handleGameEnded);
-      socket.on('newGameStarted', handleNewGameStarted);
-      socket.on('gameEnded', (data) => {
-        setLeaderboard(data.leaderboard);
-        setResults(data.results);
-        setGameState(gameStates.results);
-      });
+      socket.on('singlePlayerQuiz:started', handleStarted);
+      // socket.on('gameEnded', (data) => {
+      //   setLeaderboard(data.leaderboard);
+      //   setResults(data.results);
+      //   setGameState(gameStates.results);
+      // });
 
       return () => {
         socket.off('newQuestion', handleNewQuestion);
         socket.off('answerRevealed', handleAnswerRevealed);
         socket.off('gameEnded', handleGameEnded);
-        socket.off('newGameStarted', handleNewGameStarted);
+        // socket.off('newGameStarted', handleNewGameStarted);
         socket.off('gameEnded');
       };
     }
   }, [socket, playerName]);
+
+  const handleStarted = () => {
+    setGameState(gameStates.game);
+  };
 
   const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
     setQuestion(data.question);
@@ -78,9 +85,9 @@ export default function QuizCategory() {
       return;
     }
     if (socket) {
-      socket.emit('createSinglePlayerQuiz', (singlePlayerQuizId: string) => {
+      socket.emit('singlePlayerQuiz:create', {category: category, playerName: playerName}, (singlePlayerQuizId: string) => {
         setSinglePlayerQuizId(singlePlayerQuizId);
-        socket.emit('startSinglePlayerQuiz', { singlePlayerQuizId, playerName });
+        socket.emit('singlePlayerQuiz:start', { singlePlayerQuizId, playerName });
       });
     }
   };
@@ -90,8 +97,21 @@ export default function QuizCategory() {
     setIsModalOpen(true);
   };
 
+  const submitAnswer = (index: number) => {
+    setLastSubmittedAnswer(index);
+    socket?.emit('singlePlayerQuiz:submitAnswer', { roomId: roomId, answerIndex: index, currentPlayer: playerName });
+    setAnswerSubmitted(true);
+  };
+
+  const readyForNextQuestion = () => {
+    socket?.emit('singlePlayerQuiz:readyForNextQuestion', roomId);
+    setAnswerSubmitted(false);
+  };
+
   return (
     <>
+      <ErrorModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} errorMessage={errorMessage} />
+
       {gameState === gameStates.start && (
         <>
           <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
@@ -106,6 +126,58 @@ export default function QuizCategory() {
             onClick={startGame}
           >
             Party beitreten
+          </button>
+        </>
+      )}
+
+      {gameState === gameStates.game && (
+        <>
+          <h3>{category} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
+          <h2 className="text-2xl font-bold mb-4">
+            Frage {currentQuestionIndex}/{totalQuestions}: {question}
+          </h2>
+          <div className="flex flex-wrap justify-center">
+            {options.map((option, index) => (
+              <button
+                key={index}
+                className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded ${lastSubmittedAnswer?.toString() === index.toString() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                onClick={() => submitAnswer(index)}
+                disabled={lastSubmittedAnswer !== null}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          {(lastSubmittedAnswer !== null && !answerSubmitted) && (
+            <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
+          )}
+
+          {(lastSubmittedAnswer !== null && answerSubmitted) && (
+            <>
+              {!isAnswerCorrect && (
+                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort falsch.</div>
+              )}
+              <div id="explanation" className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
+                Antwort: {explanation}</div>
+            </>
+          )}
+          {leaderboard.length !== 0 && (
+            <>
+              <div className="mt-8">
+                <h3 className="text-xl font-bold mb-2">Punktestand</h3>
+                {leaderboard.map((player, index) => (
+                  <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort
+                    korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
+                ))}
+              </div>
+            </>
+          )}
+          <button
+            className={`bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4 ${!answerSubmitted ? 'opacity-50 cursor-not-allowed' : ''}\``}
+            onClick={readyForNextQuestion}
+            disabled={!answerSubmitted}
+          >Nächste Frage
           </button>
         </>
       )}

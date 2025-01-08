@@ -219,12 +219,12 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   };
 
   const createCategory = () => {
-    if (newCategoryName.trim() === '') {
+    if (category.trim() === '') {
       showError('Bitte gib einen Kategorienamen ein.');
       return;
     }
     setIsLoading(true);
-    socket?.emit('createCustomCategory', { categoryName: newCategoryName });
+    socket?.emit('createCustomCategory', { category: category });
   };
 
   const shareOnWhatsApp = () => {

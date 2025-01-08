@@ -21,6 +21,7 @@ interface SinglePlayerQuiz {
   readyForNextQuestion: number;
   difficulty: string;
   questionAnswered: boolean;
+  player: Player;
 }
 
 interface Player {
@@ -67,12 +68,20 @@ export class AsynchronousQuizGateway
 
   handleDisconnect(client: any): any {}
 
-  @SubscribeMessage('createSinglePlayerQuiz')
+  @SubscribeMessage('singlePlayerQuiz:create')
   createSinglePlayerQuiz(
     client: Socket,
-    payload: { category: string },
+    payload: { category: string, playerName: string },
   ): string {
     const singlePlayerQuizId = crypto.randomUUID();
+    const player: Player = {
+      id: client.id,
+      name: payload.playerName,
+      score: 0,
+      ready: false,
+      answered: false,
+      lastQuestionCorrect: false,
+    };
     this.singlePlayerQuizzes.set(singlePlayerQuizId, {
       id: singlePlayerQuizId,
       category: payload.category,
@@ -84,7 +93,48 @@ export class AsynchronousQuizGateway
       readyForNextQuestion: 0,
       difficulty: '',
       questionAnswered: false,
+      player: player,
     });
     return singlePlayerQuizId;
   }
+
+  @SubscribeMessage('singlePlayerQuiz:start')
+  handleStartNewGame(
+    client: Socket,
+    payload: { singlePlayerQuizId: string },
+  ): void {
+    const singlePlayerQuizId = payload.singlePlayerQuizId;
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(
+      singlePlayerQuizId,
+    );
+    if (singlePlayerQuiz) {
+      client.join(singlePlayerQuizId);
+      this.server.to(singlePlayerQuizId).emit('singlePlayerQuiz:started');
+    }
+  }
+
+  // @SubscribeMessage('singlePlayerQuiz:submitAnswer')
+  // handleSubmitAnswer(
+  //   client: Socket,
+  //   payload: { roomId: string; answerIndex: number; currentPlayer: string },
+  // ): void {
+  //   const room = this.rooms.get(payload.roomId);
+  //   if (room && room.gameStarted) {
+  //     client.join(room.id);
+  //     const player = room.players.find((p) => p.name === payload.currentPlayer);
+  //     player.lastQuestionCorrect = false;
+  //     const question = room.questions[room.currentQuestionIndex];
+  //     if (player && question && !player.answered) {
+  //       player.answered = true;
+  //       if (payload.answerIndex === question.correctIndex) {
+  //         player.score += 1;
+  //         player.lastQuestionCorrect = true;
+  //       }
+  //       room.allPlayersAnsweredQuestion = room.players.every((p) => p.answered);
+  //       if (room.allPlayersAnsweredQuestion) {
+  //         this.revealAnswer(room);
+  //       }
+  //     }
+  //   }
+  // }
 }
