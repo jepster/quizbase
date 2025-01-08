@@ -67,7 +67,6 @@ export class SynchronousQuizGateway
   server: Server;
 
   private rooms: Map<string, Room> = new Map();
-  private singlePlayerQuizzes: Map<string, SinglePlayerQuiz> = new Map();
   private categories: string[];
   private questionsNumberInGame: number = 10;
 
@@ -133,27 +132,6 @@ export class SynchronousQuizGateway
       allPlayersAnsweredQuestion: false,
     });
     return roomId;
-  }
-
-  @SubscribeMessage('createSinglePlayerQuiz')
-  createSinglePlayerQuiz(
-    client: Socket,
-    payload: { category: string },
-  ): string {
-    const uniqueId = crypto.randomUUID();
-    this.singlePlayerQuizzes.set(uniqueId, {
-      id: uniqueId,
-      category: payload.category,
-      questions: [],
-      currentQuestionIndex: 0,
-      gameStarted: false,
-      answersReceived: 0,
-      categorySelectionIndex: 0,
-      readyForNextQuestion: 0,
-      difficulty: '',
-      allPlayersAnsweredQuestion: false,
-    });
-    return uniqueId;
   }
 
   @SubscribeMessage('joinRoom')

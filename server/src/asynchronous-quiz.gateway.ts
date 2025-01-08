@@ -20,7 +20,7 @@ interface SinglePlayerQuiz {
   categorySelectionIndex: number;
   readyForNextQuestion: number;
   difficulty: string;
-  allPlayersAnsweredQuestion: boolean;
+  questionAnswered: boolean;
 }
 
 interface Player {
@@ -63,9 +63,28 @@ export class AsynchronousQuizGateway
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
-  handleConnection(client: any, ...args: any[]): any {
-  }
+  handleConnection(client: any, ...args: any[]): any {}
 
-  handleDisconnect(client: any): any {
+  handleDisconnect(client: any): any {}
+
+  @SubscribeMessage('createSinglePlayerQuiz')
+  createSinglePlayerQuiz(
+    client: Socket,
+    payload: { category: string },
+  ): string {
+    const singlePlayerQuizId = crypto.randomUUID();
+    this.singlePlayerQuizzes.set(singlePlayerQuizId, {
+      id: singlePlayerQuizId,
+      category: payload.category,
+      questions: [],
+      currentQuestionIndex: 0,
+      gameStarted: false,
+      answersReceived: 0,
+      categorySelectionIndex: 0,
+      readyForNextQuestion: 0,
+      difficulty: '',
+      questionAnswered: false,
+    });
+    return singlePlayerQuizId;
   }
 }

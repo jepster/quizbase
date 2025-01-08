@@ -22,6 +22,7 @@ export default function QuizCategory() {
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
+  const [singlePlayerQuizId, setSinglePlayerQuizId] = useState<string>('');
 
   const gameStates = {
     start: 'start',
@@ -76,9 +77,11 @@ export default function QuizCategory() {
       showError('Es muss ein Name eingegeben werden.');
       return;
     }
-    if (socket && roomId) {
-      socket.emit('startGame', { roomId: roomId, playerName });
-      setGameState(gameStates.waitingRoom);
+    if (socket) {
+      socket.emit('createSinglePlayerQuiz', (singlePlayerQuizId: string) => {
+        setSinglePlayerQuizId(singlePlayerQuizId);
+        socket.emit('startSinglePlayerQuiz', { singlePlayerQuizId, playerName });
+      });
     }
   };
 
