@@ -104,9 +104,7 @@ export class AsynchronousQuizGateway
     payload: { singlePlayerQuizId: string },
   ): void {
     const singlePlayerQuizId = payload.singlePlayerQuizId;
-    const singlePlayerQuiz = this.singlePlayerQuizzes.get(
-      singlePlayerQuizId,
-    );
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(singlePlayerQuizId);
     if (singlePlayerQuiz) {
       client.join(singlePlayerQuizId);
       this.server.to(singlePlayerQuizId).emit('singlePlayerQuiz:started');

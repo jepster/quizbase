@@ -6,10 +6,10 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PerplexityService } from './perplexity.service';
+import {QuestionDbService} from "./question-db.service";
 
 interface Room {
   id: string;
@@ -70,25 +70,10 @@ export class SynchronousQuizGateway
   private categories: string[];
   private questionsNumberInGame: number = 10;
 
-  private readonly mongoUri = '';
-  private readonly dbName = 'quizbase';
-  private readonly collectionName = 'trivia_questions';
-
   constructor(
-    private configService: ConfigService,
     private perplexityService: PerplexityService,
+    private questionDbService: QuestionDbService,
   ) {
-    this.mongoUri = this.configService.get('DATABASE_URL');
-  }
-
-  async loadCategories(): Promise<void> {
-    try {
-      const collection = await this.getMongoDbCollection();
-      const allCategories = await collection.distinct('category');
-      this.categories = allCategories.filter((category) => category.length > 1);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
   }
 
   @SubscribeMessage('difficultySelected')
@@ -105,7 +90,7 @@ export class SynchronousQuizGateway
       const categoryName = category;
       const roomDifficulty = room.difficulty;
 
-      room.questions = await this.getQuestionsFromMongoDB(
+      room.questions = await this.questionDbService.getQuestionsFromMongoDB(
         categoryName,
         roomDifficulty,
       );
@@ -318,7 +303,7 @@ export class SynchronousQuizGateway
 
   private async startCategorySelection(room: Room): Promise<void> {
     room.categorySelectionIndex = 0;
-    await this.loadCategories();
+    this.categories = await this.questionDbService.loadCategories();
     this.server.to(room.id).emit('selectCategory', {
       categories: this.categories,
       playerIndex: room.categorySelectionIndex,
@@ -404,60 +389,5 @@ export class SynchronousQuizGateway
       adjectives[Math.floor(Math.random() * adjectives.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     return `${randomAdjective}${randomNoun}`;
-  }
-
-  private async getMongoDbCollection(): Promise<Collection> {
-    const client = new MongoClient(this.mongoUri);
-    await client.connect();
-    const db = client.db(this.dbName);
-    return db.collection(this.collectionName);
-  }
-
-  private async getQuestionsFromMongoDB(
-    category: string,
-    difficulty: string,
-  ): Promise<Question[]> {
-    try {
-      const collection = await this.getMongoDbCollection();
-      const questions = await collection
-        .aggregate([
-          { $match: { category: category, difficulty: difficulty } },
-          { $sample: { size: this.questionsNumberInGame } },
-        ])
-        .toArray();
-
-      const uniqueQuestions = this.removeDuplicates(
-        questions.map((q) => ({
-          question: q.question,
-          options: q.options,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-        })),
-      );
-
-      const shuffledQuestions = this.shuffleArray(uniqueQuestions);
-
-      return shuffledQuestions;
-    } catch (error) {
-      console.error('Error fetching questions from MongoDB:', error);
-      return [];
-    }
-  }
-
-  private removeDuplicates(questions: Question[]): Question[] {
-    const seen = new Set();
-    return questions.filter((q) => {
-      const duplicate = seen.has(q.question);
-      seen.add(q.question);
-      return !duplicate;
-    });
-  }
-
-  private shuffleArray(array: Question[]): Question[] {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
   }
 }
