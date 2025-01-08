@@ -21,14 +21,19 @@ export class QuestionDbService {
   }
 
   public async getQuestionsFromMongoDB(
-    category: string,
+    categoryHumanReadable: string,
     difficulty: string,
   ): Promise<Question[]> {
     try {
       const collection = await this.getMongoDbCollection();
       const questions = await collection
         .aggregate([
-          { $match: { category: category, difficulty: difficulty } },
+          {
+            $match: {
+              categoryHumanReadable: categoryHumanReadable,
+              difficulty: difficulty,
+            },
+          },
           { $sample: { size: this.questionsNumberInGame } },
         ])
         .toArray();

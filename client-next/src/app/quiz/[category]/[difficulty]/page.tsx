@@ -85,9 +85,9 @@ export default function QuizCategory() {
       return;
     }
     if (socket) {
-      socket.emit('singlePlayerQuiz:create', {category: category, playerName: playerName}, (singlePlayerQuizId: string) => {
-        setSinglePlayerQuizId(singlePlayerQuizId);
-        socket.emit('singlePlayerQuiz:start', { singlePlayerQuizId, playerName });
+      socket.emit('singlePlayerQuiz:create', {category: category, playerName: playerName, difficulty: difficulty}, (singlePlayerQuiz: Array<{id: string, category: string, questions: Array<{question: string, options: Array<{string}>, correctIndex: number, explanation: string}>}>) => {
+        debugger;
+        setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }
   };

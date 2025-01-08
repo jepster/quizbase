@@ -203,9 +203,9 @@ export class SynchronousQuizGateway
   @SubscribeMessage('createCustomCategory')
   async createCustomCategory(
     client: Socket,
-    payload: { categoryName: string },
+    payload: { category: string },
   ): Promise<void> {
-    await this.perplexityService.run(payload.categoryName);
+    await this.perplexityService.run(payload.category);
     client.emit('categoryCreated');
   }
 

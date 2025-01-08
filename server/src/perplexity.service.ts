@@ -30,9 +30,14 @@ export class PerplexityService {
     })(category);
   }
 
-  private async createQuestionIteration(category: string, difficulty: string) {
+  private async createQuestionIteration(
+    categoryHumanReadable: string,
+    difficulty: string,
+  ) {
     const apiKey = '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';
     const client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai' });
+
+    const categoryMachineName = this.generateMachineName(categoryHumanReadable);
 
     const response = await client.chat.completions.create({
       model: 'llama-3.1-sonar-small-128k-online',
@@ -41,7 +46,7 @@ export class PerplexityService {
           role: 'user',
           content:
             'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Da es 3 Antwortoptionen gibt, muss der Index bei 0 beginnen und bei 2 enden. Die Erklärung muss aus zwei bis drei knappen Sätzen bestehen. Die Kategorie ist ' +
-            category +
+            categoryHumanReadable +
             ' und der Schwierigkeitsgrad: ' +
             difficulty +
             '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
@@ -52,9 +57,12 @@ export class PerplexityService {
             '"difficulty: "' +
             difficulty +
             '",' +
-            '"category: "' +
-            category +
-            '"}',
+            '"categoryHumanReadable: "' +
+            categoryHumanReadable +
+            '",' +
+            '"categoryMachineName: "' +
+            categoryMachineName +
+            '"',
         },
       ],
       temperature: 0.7,
@@ -113,5 +121,15 @@ export class PerplexityService {
     } finally {
       await client.close();
     }
+  }
+
+  private generateMachineName(humanReadableString: string): string {
+    return humanReadableString
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-');
   }
 }

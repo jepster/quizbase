@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { QuestionDbService } from './question-db.service';
 
 interface SinglePlayerQuiz {
   id: string;
@@ -60,7 +61,10 @@ export class AsynchronousQuizGateway
   private readonly dbName = 'quizbase';
   private readonly collectionName = 'trivia_questions';
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private questionDbService: QuestionDbService,
+  ) {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
@@ -69,10 +73,10 @@ export class AsynchronousQuizGateway
   handleDisconnect(client: any): any {}
 
   @SubscribeMessage('singlePlayerQuiz:create')
-  createSinglePlayerQuiz(
+  async createSinglePlayerQuiz(
     client: Socket,
-    payload: { category: string, playerName: string },
-  ): string {
+    payload: { category: string; playerName: string; difficulty: string },
+  ): Promise<SinglePlayerQuiz> {
     const singlePlayerQuizId = crypto.randomUUID();
     const player: Player = {
       id: client.id,
@@ -82,10 +86,15 @@ export class AsynchronousQuizGateway
       answered: false,
       lastQuestionCorrect: false,
     };
+    const questions = await this.questionDbService.getQuestionsFromMongoDB(
+      payload.difficulty,
+      payload.category,
+    );
+
     this.singlePlayerQuizzes.set(singlePlayerQuizId, {
       id: singlePlayerQuizId,
       category: payload.category,
-      questions: [],
+      questions: questions,
       currentQuestionIndex: 0,
       gameStarted: false,
       answersReceived: 0,
@@ -95,20 +104,35 @@ export class AsynchronousQuizGateway
       questionAnswered: false,
       player: player,
     });
-    return singlePlayerQuizId;
+    return this.singlePlayerQuizzes.get(singlePlayerQuizId);
   }
 
-  @SubscribeMessage('singlePlayerQuiz:start')
-  handleStartNewGame(
-    client: Socket,
-    payload: { singlePlayerQuizId: string },
-  ): void {
-    const singlePlayerQuizId = payload.singlePlayerQuizId;
-    const singlePlayerQuiz = this.singlePlayerQuizzes.get(singlePlayerQuizId);
-    if (singlePlayerQuiz) {
-      client.join(singlePlayerQuizId);
-      this.server.to(singlePlayerQuizId).emit('singlePlayerQuiz:started');
+  @SubscribeMessage('readyForNextQuestion')
+  private askNextQuestion(client: Socket, roomId: string): void {
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(roomId);
+    if (singlePlayerQuiz.currentQuestionIndex < this.questionsNumberInGame) {
+      const question =
+        singlePlayerQuiz.questions[singlePlayerQuiz.currentQuestionIndex];
+      this.server.to(singlePlayerQuiz.id).emit('newQuestion', {
+        question: question.question,
+        options: question.options,
+        category: singlePlayerQuiz.category,
+        difficulty: singlePlayerQuiz.difficulty,
+        totalQuestionsCount: singlePlayerQuiz.questions.length,
+      });
+    } else {
+      this.endGame(singlePlayerQuiz);
     }
+  }
+
+  private endGame(singlePlayerQuiz: SinglePlayerQuiz): void {
+    const answeredQuestions = singlePlayerQuiz.questions.slice(
+      0,
+      singlePlayerQuiz.currentQuestionIndex,
+    );
+    this.server.to(singlePlayerQuiz.id).emit('gameEnded', {
+      results: answeredQuestions,
+    });
   }
 
   // @SubscribeMessage('singlePlayerQuiz:submitAnswer')

@@ -22,7 +22,6 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [newCategoryName, setNewCategoryName] = useState<string>('');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -462,8 +461,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Kategoriename"
-            value={newCategoryName}
-            onChange={(e) => setNewCategoryName(e.target.value)}
+            value={category}
+            onChange={(e) => setCategory((e.target.value))}
           />
           <button
             className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
