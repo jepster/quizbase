@@ -189,8 +189,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     socket?.emit('playerReady', { roomId: roomId, playerName });
   };
 
-  const selectCategory = (category: string) => {
-    socket?.emit('categorySelected', { roomId: roomId, categoryName: category });
+  const selectCategory = (categoryHumanReadable: string) => {
+    socket?.emit('categorySelected', { roomId: roomId, categoryHumanReadable: categoryHumanReadable });
   };
 
   const selectDifficulty = (difficulty: string) => {

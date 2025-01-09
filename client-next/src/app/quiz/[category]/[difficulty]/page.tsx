@@ -5,6 +5,8 @@ import {useEffect, useState} from "react";
 import {useSocket} from "@/app/hooks/useSocket";
 import ErrorModal from "@/app/components/ErrorModal";
 
+// @TODO http://172.17.30.97:9000/quiz/geschichte-im-mittelalter/low
+
 export default function QuizCategory() {
   const params = useParams();
   const category = params.category;
@@ -86,7 +88,6 @@ export default function QuizCategory() {
     }
     if (socket) {
       socket.emit('singlePlayerQuiz:create', {category: category, playerName: playerName, difficulty: difficulty}, (singlePlayerQuiz: Array<{id: string, category: string, questions: Array<{question: string, options: Array<{string}>, correctIndex: number, explanation: string}>}>) => {
-        debugger;
         setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }

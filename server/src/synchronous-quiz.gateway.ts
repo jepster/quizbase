@@ -9,7 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PerplexityService } from './perplexity.service';
-import {QuestionDbService} from "./question-db.service";
+import { QuestionDbService } from './question-db.service';
 
 interface Room {
   id: string;
@@ -20,19 +20,6 @@ interface Room {
   answersReceived: number;
   categorySelectionIndex: number;
   selectedCategory: string;
-  readyForNextQuestion: number;
-  difficulty: string;
-  allPlayersAnsweredQuestion: boolean;
-}
-
-interface SinglePlayerQuiz {
-  id: string;
-  category: string;
-  questions: Question[];
-  currentQuestionIndex: number;
-  gameStarted: boolean;
-  answersReceived: number;
-  categorySelectionIndex: number;
   readyForNextQuestion: number;
   difficulty: string;
   allPlayersAnsweredQuestion: boolean;
@@ -73,8 +60,7 @@ export class SynchronousQuizGateway
   constructor(
     private perplexityService: PerplexityService,
     private questionDbService: QuestionDbService,
-  ) {
-  }
+  ) {}
 
   @SubscribeMessage('difficultySelected')
   async handleDifficultySelected(
@@ -83,17 +69,18 @@ export class SynchronousQuizGateway
   ): Promise<void> {
     const room = this.rooms.get(payload.roomId);
     if (room) {
-      const category = this.categories.find((c) => c === room.selectedCategory);
+      const categoryHumanReadable = this.categories.find(
+        (c) => c === room.selectedCategory,
+      );
 
       room.difficulty = payload.difficulty;
-
-      const categoryName = category;
       const roomDifficulty = room.difficulty;
 
-      room.questions = await this.questionDbService.getQuestionsFromMongoDB(
-        categoryName,
-        roomDifficulty,
-      );
+      room.questions =
+        await this.questionDbService.getQuestionsByHumanReadableCategory(
+          categoryHumanReadable,
+          roomDifficulty,
+        );
       room.currentQuestionIndex = 0;
       room.gameStarted = true;
       this.askNextQuestion(room);
@@ -185,14 +172,14 @@ export class SynchronousQuizGateway
   @SubscribeMessage('categorySelected')
   handleCategorySelected(
     client: Socket,
-    payload: { roomId: string; categoryName: string },
+    payload: { roomId: string; categoryHumanReadable: string },
   ): void {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       client.join(room.id);
-      room.selectedCategory = payload.categoryName;
+      room.selectedCategory = payload.categoryHumanReadable;
       this.server.to(room.id).emit('selectDifficulty', {
-        categoryName: room.selectedCategory,
+        categoryHumanReadable: room.selectedCategory,
         playerIndex: room.categorySelectionIndex,
         playerName: room.players[room.categorySelectionIndex].name,
         difficulty: room.difficulty,

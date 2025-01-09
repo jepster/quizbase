@@ -86,10 +86,11 @@ export class AsynchronousQuizGateway
       answered: false,
       lastQuestionCorrect: false,
     };
-    const questions = await this.questionDbService.getQuestionsFromMongoDB(
-      payload.difficulty,
-      payload.category,
-    );
+    const questions =
+      await this.questionDbService.getQuestionsByCategoryMachineName(
+        payload.category,
+        payload.difficulty,
+      );
 
     this.singlePlayerQuizzes.set(singlePlayerQuizId, {
       id: singlePlayerQuizId,

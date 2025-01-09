@@ -20,46 +20,31 @@ export class QuestionDbService {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
-  public async getQuestionsFromMongoDB(
+  public async getQuestionsByCategoryMachineName(
+    categoryMachineName: string,
+    difficulty: string,
+  ): Promise<Question[]> {
+    return this.fetchAndProcessQuestions({
+      categoryMachineName: categoryMachineName,
+      difficulty: difficulty,
+    });
+  }
+
+  public async getQuestionsByHumanReadableCategory(
     categoryHumanReadable: string,
     difficulty: string,
   ): Promise<Question[]> {
-    try {
-      const collection = await this.getMongoDbCollection();
-      const questions = await collection
-        .aggregate([
-          {
-            $match: {
-              categoryHumanReadable: categoryHumanReadable,
-              difficulty: difficulty,
-            },
-          },
-          { $sample: { size: this.questionsNumberInGame } },
-        ])
-        .toArray();
-
-      const uniqueQuestions = this.removeDuplicates(
-        questions.map((q) => ({
-          question: q.question,
-          options: q.options,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-        })),
-      );
-
-      const shuffledQuestions = this.shuffleArray(uniqueQuestions);
-
-      return shuffledQuestions;
-    } catch (error) {
-      console.error('Error fetching questions from MongoDB:', error);
-      return [];
-    }
+    return this.fetchAndProcessQuestions({
+      categoryHumanReadable: categoryHumanReadable,
+      difficulty: difficulty,
+    });
   }
+
 
   public async loadCategories(): Promise<string[]> {
     try {
       const collection = await this.getMongoDbCollection();
-      const allCategories = await collection.distinct('category');
+      const allCategories = await collection.distinct('categoryHumanReadable');
       return allCategories.filter((category) => category.length > 1);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -88,5 +73,33 @@ export class QuestionDbService {
     await client.connect();
     const db = client.db(this.dbName);
     return db.collection(this.collectionName);
+  }
+
+  private async fetchAndProcessQuestions(matchCriteria: {
+    [key: string]: string;
+  }): Promise<Question[]> {
+    try {
+      const collection = await this.getMongoDbCollection();
+      const questions = await collection
+        .aggregate([
+          { $match: matchCriteria },
+          { $sample: { size: this.questionsNumberInGame } },
+        ])
+        .toArray();
+
+      const uniqueQuestions = this.removeDuplicates(
+        questions.map((q) => ({
+          question: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+        })),
+      );
+
+      return this.shuffleArray(uniqueQuestions);
+    } catch (error) {
+      console.error('Error fetching questions from MongoDB:', error);
+      return [];
+    }
   }
 }
