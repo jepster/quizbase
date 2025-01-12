@@ -6,7 +6,6 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QuestionDbService } from './question-db.service';
@@ -54,19 +53,12 @@ export class AsynchronousQuizGateway
   server: Server;
 
   private singlePlayerQuizzes: Map<string, SinglePlayerQuiz> = new Map();
-  private categories: string[];
   private questionsNumberInGame: number = 10;
-
-  private readonly mongoUri = '';
-  private readonly dbName = 'quizbase';
-  private readonly collectionName = 'trivia_questions';
 
   constructor(
     private configService: ConfigService,
     private questionDbService: QuestionDbService,
-  ) {
-    this.mongoUri = this.configService.get('DATABASE_URL');
-  }
+  ) {}
 
   handleConnection(client: any, ...args: any[]): any {}
 
