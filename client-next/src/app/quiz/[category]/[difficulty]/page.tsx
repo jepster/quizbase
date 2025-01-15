@@ -28,6 +28,7 @@ export default function AnsynchronousQuiz() {
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [score, setScore] = useState<number>(0);
 
   const gameStates = {
     start: 'start',
@@ -67,7 +68,7 @@ export default function AnsynchronousQuiz() {
   };
 
   const handleGameEnded = (data: { score: number, totalQuestions: number }) => {
-    setGameState(gameStates.results);
+    setScore(data.score);
   };
 
   const startGame = () => {
@@ -158,7 +159,7 @@ export default function AnsynchronousQuiz() {
           {gameState === gameStates.results && (
             <>
               <h2 className="text-2xl font-bold mb-4">Spielergebnis</h2>
-              <p>Dein Endergebnis: {leaderboard[0]?.score} von {totalQuestions} Punkten</p>
+              <p>Dein Endergebnis: {score} von {totalQuestions} Punkten</p>
               <button
                 className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
                 onClick={() => setGameState(gameStates.start)}
