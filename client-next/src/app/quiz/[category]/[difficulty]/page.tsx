@@ -1,13 +1,14 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import {useEffect, useState} from "react";
-import {useSocket} from "@/app/hooks/useSocket";
+import { useEffect, useState } from "react";
+import { useSocket } from "@/app/hooks/useSocket";
 import ErrorModal from "@/app/components/ErrorModal";
 
 // @TODO http://172.17.30.97:9000/quiz/geschichte-im-mittelalter/low
 
-export default function QuizCategory() {
+
+export default function AnsynchronousQuiz() {
   const params = useParams();
   const category = params.category;
   const difficulty = params.difficulty;
@@ -22,7 +23,6 @@ export default function QuizCategory() {
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
   const [explanation, setExplanation] = useState<string>('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
-  const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
   const [singlePlayerQuizId, setSinglePlayerQuizId] = useState<string>('');
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
@@ -37,47 +37,36 @@ export default function QuizCategory() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('newQuestion', handleNewQuestion);
-      socket.on('answerRevealed', handleAnswerRevealed);
-      socket.on('gameEnded', handleGameEnded);
-      socket.on('singlePlayerQuiz:started', handleStarted);
-      // socket.on('gameEnded', (data) => {
-      //   setLeaderboard(data.leaderboard);
-      //   setResults(data.results);
-      //   setGameState(gameStates.results);
-      // });
+      socket.on('singlePlayerQuiz:question', handleNewQuestion);
+      socket.on('singlePlayerQuiz:answerResult', handleAnswerResult);
+      socket.on('singlePlayerQuiz:gameEnded', handleGameEnded);
 
       return () => {
-        socket.off('newQuestion', handleNewQuestion);
-        socket.off('answerRevealed', handleAnswerRevealed);
-        socket.off('gameEnded', handleGameEnded);
-        // socket.off('newGameStarted', handleNewGameStarted);
-        socket.off('gameEnded');
+        socket.off('singlePlayerQuiz:question', handleNewQuestion);
+        socket.off('singlePlayerQuiz:answerResult', handleAnswerResult);
+        socket.off('singlePlayerQuiz:gameEnded', handleGameEnded);
       };
     }
   }, [socket, playerName]);
 
-  const handleStarted = () => {
+  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, currentQuestionIndex: number, difficulty: string }) => {
+    setQuestion(data.question);
+    setOptions(data.options);
+    setCurrentQuestionIndex(data.currentQuestionIndex);
+    setTotalQuestions(data.totalQuestionsCount);
+    setIsAnswerCorrect(false);
+    setAnswerSubmitted(false);
+    setLastSubmittedAnswer(null);
     setGameState(gameStates.game);
   };
 
-  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
-    setQuestion(data.question);
-    setOptions(data.options);
-    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-    setTotalQuestions(data.totalQuestionsCount);
-    setIsAnswerCorrect(false);
-  };
-
-  const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, allPlayersAnsweredQuestion: boolean, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
+  const handleAnswerResult = (data: { correctIndex: number, explanation: string, isCorrect: boolean, score: number }) => {
     setExplanation(data.explanation);
-    if (data.leaderboard[0].lastQuestionCorrect) {
-      setIsAnswerCorrect(true);
-    }
+    setIsAnswerCorrect(data.isCorrect);
+    setAnswerSubmitted(true);
   };
 
-  const handleGameEnded = (data: { leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }>, results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }> }) => {
-    setLeaderboard(data.leaderboard);
+  const handleGameEnded = (data: { score: number, totalQuestions: number }) => {
     setGameState(gameStates.results);
   };
 
@@ -87,7 +76,7 @@ export default function QuizCategory() {
       return;
     }
     if (socket) {
-      socket.emit('singlePlayerQuiz:create', {category: category, playerName: playerName, difficulty: difficulty}, (singlePlayerQuiz: Array<{id: string, category: string, questions: Array<{question: string, options: Array<{string}>, correctIndex: number, explanation: string}>}>) => {
+      socket.emit('singlePlayerQuiz:create', { category, playerName, difficulty }, (singlePlayerQuiz: { id: string }) => {
         setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }
@@ -100,13 +89,11 @@ export default function QuizCategory() {
 
   const submitAnswer = (index: number) => {
     setLastSubmittedAnswer(index);
-    socket?.emit('singlePlayerQuiz:submitAnswer', { roomId: roomId, answerIndex: index, currentPlayer: playerName });
-    setAnswerSubmitted(true);
+    socket?.emit('singlePlayerQuiz:submitAnswer', { quizId: singlePlayerQuizId, answerIndex: index });
   };
 
   const readyForNextQuestion = () => {
-    socket?.emit('singlePlayerQuiz:readyForNextQuestion', roomId);
-    setAnswerSubmitted(false);
+    socket?.emit('singlePlayerQuiz:nextQuestion', singlePlayerQuizId);
   };
 
   return (
@@ -117,7 +104,7 @@ export default function QuizCategory() {
 
           {gameState === gameStates.start && (
             <>
-              <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
+              <h2 className="text-2xl font-bold mb-4">Spiel starten</h2>
               <input
                 className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
                 placeholder="Dein Name"
@@ -128,7 +115,7 @@ export default function QuizCategory() {
                 className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                 onClick={startGame}
               >
-                Party beitreten
+                Spiel starten
               </button>
             </>
           )}
@@ -143,51 +130,45 @@ export default function QuizCategory() {
                 {options.map((option, index) => (
                   <button
                     key={index}
-                    className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded ${lastSubmittedAnswer?.toString() === index.toString() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded ${lastSubmittedAnswer === index ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => submitAnswer(index)}
-                    disabled={lastSubmittedAnswer !== null}
+                    disabled={answerSubmitted}
                   >
                     {option}
                   </button>
                 ))}
               </div>
 
-              {(lastSubmittedAnswer !== null && !answerSubmitted) && (
-                <p className="text-xl font-bold mt-4">Antwort gesendet. Warte auf andere Spieler...</p>
-              )}
-
-              {(lastSubmittedAnswer !== null && answerSubmitted) && (
+              {answerSubmitted && (
                 <>
-                  {!isAnswerCorrect && (
-                    <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort
-                      falsch.</div>
-                  )}
-                  <div id="explanation"
-                       className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
-                    Antwort: {explanation}</div>
-                </>
-              )}
-              {leaderboard.length !== 0 && (
-                <>
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-2">Punktestand</h3>
-                    {leaderboard.map((player, index) => (
-                      <p key={index}>{player.name}: {player.score} Punkte - letzte Antwort
-                        korrekt: {player.lastQuestionCorrect ? '✅' : '❌'}</p>
-                    ))}
+                  <div className={`text-xl font-bold mb-2 ${isAnswerCorrect ? 'bg-green-500' : 'bg-red-500'} text-white p-4 rounded-lg`}>
+                    {isAnswerCorrect ? 'Richtig!' : 'Falsch!'} {explanation}
                   </div>
+                  <button
+                    className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
+                    onClick={readyForNextQuestion}
+                  >
+                    Nächste Frage
+                  </button>
                 </>
               )}
+            </>
+          )}
+
+          {gameState === gameStates.results && (
+            <>
+              <h2 className="text-2xl font-bold mb-4">Spielergebnis</h2>
+              <p>Dein Endergebnis: {leaderboard[0]?.score} von {totalQuestions} Punkten</p>
               <button
-                className={`bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4 ${!answerSubmitted ? 'opacity-50 cursor-not-allowed' : ''}\``}
-                onClick={readyForNextQuestion}
-                disabled={!answerSubmitted}
-              >Nächste Frage
+                className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
+                onClick={() => setGameState(gameStates.start)}
+              >
+                Neues Spiel starten
               </button>
             </>
           )}
         </div>
       </div>
     </div>
-      );
-    }
+  );
+}

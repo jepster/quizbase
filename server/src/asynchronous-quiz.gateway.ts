@@ -60,9 +60,13 @@ export class AsynchronousQuizGateway
     private questionDbService: QuestionDbService,
   ) {}
 
-  handleConnection(client: any, ...args: any[]): any {}
+  handleConnection(client: Socket): void {
+    console.log(`Client connected: ${client.id}`);
+  }
 
-  handleDisconnect(client: any): any {}
+  handleDisconnect(client: Socket): void {
+    console.log(`Client disconnected: ${client.id}`);
+  }
 
   @SubscribeMessage('singlePlayerQuiz:create')
   async createSinglePlayerQuiz(
@@ -84,38 +88,82 @@ export class AsynchronousQuizGateway
         payload.difficulty,
       );
 
-    this.singlePlayerQuizzes.set(singlePlayerQuizId, {
+    const singlePlayerQuiz: SinglePlayerQuiz = {
       id: singlePlayerQuizId,
       category: payload.category,
       questions: questions,
       currentQuestionIndex: 0,
-      gameStarted: false,
+      gameStarted: true,
       answersReceived: 0,
       categorySelectionIndex: 0,
       readyForNextQuestion: 0,
-      difficulty: '',
+      difficulty: payload.difficulty,
       questionAnswered: false,
       player: player,
-    });
-    return this.singlePlayerQuizzes.get(singlePlayerQuizId);
+    };
+
+    this.singlePlayerQuizzes.set(singlePlayerQuizId, singlePlayerQuiz);
+    client.join(singlePlayerQuizId);
+    this.askNextQuestion(client, singlePlayerQuizId);
+    return singlePlayerQuiz;
   }
 
-  @SubscribeMessage('readyForNextQuestion')
-  private askNextQuestion(client: Socket, roomId: string): void {
-    const singlePlayerQuiz = this.singlePlayerQuizzes.get(roomId);
+  @SubscribeMessage('singlePlayerQuiz:submitAnswer')
+  handleSubmitAnswer(
+    client: Socket,
+    payload: { quizId: string; answerIndex: number },
+  ): void {
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(payload.quizId);
+    if (singlePlayerQuiz && !singlePlayerQuiz.questionAnswered) {
+      const question =
+        singlePlayerQuiz.questions[singlePlayerQuiz.currentQuestionIndex];
+      singlePlayerQuiz.player.lastQuestionCorrect =
+        payload.answerIndex === question.correctIndex;
+      if (singlePlayerQuiz.player.lastQuestionCorrect) {
+        singlePlayerQuiz.player.score += 1;
+      }
+      singlePlayerQuiz.questionAnswered = true;
+      this.revealAnswer(singlePlayerQuiz);
+    }
+  }
+
+  @SubscribeMessage('singlePlayerQuiz:nextQuestion')
+  handleNextQuestion(client: Socket, quizId: string): void {
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(quizId);
+    if (singlePlayerQuiz) {
+      singlePlayerQuiz.currentQuestionIndex++;
+      singlePlayerQuiz.questionAnswered = false;
+      this.askNextQuestion(client, quizId);
+    }
+  }
+
+  private askNextQuestion(client: Socket, quizId: string): void {
+    const singlePlayerQuiz = this.singlePlayerQuizzes.get(quizId);
     if (singlePlayerQuiz.currentQuestionIndex < this.questionsNumberInGame) {
       const question =
         singlePlayerQuiz.questions[singlePlayerQuiz.currentQuestionIndex];
-      this.server.to(singlePlayerQuiz.id).emit('newQuestion', {
+      client.emit('singlePlayerQuiz:question', {
         question: question.question,
         options: question.options,
         category: singlePlayerQuiz.category,
         difficulty: singlePlayerQuiz.difficulty,
-        totalQuestionsCount: singlePlayerQuiz.questions.length,
+        currentQuestionIndex: singlePlayerQuiz.currentQuestionIndex + 1,
+        totalQuestionsCount: this.questionsNumberInGame,
       });
     } else {
       this.endGame(singlePlayerQuiz);
     }
+  }
+
+  private revealAnswer(singlePlayerQuiz: SinglePlayerQuiz): void {
+    const question =
+      singlePlayerQuiz.questions[singlePlayerQuiz.currentQuestionIndex];
+    this.server.to(singlePlayerQuiz.id).emit('singlePlayerQuiz:answerResult', {
+      correctIndex: question.correctIndex,
+      explanation: question.explanation,
+      isCorrect: singlePlayerQuiz.player.lastQuestionCorrect,
+      score: singlePlayerQuiz.player.score,
+    });
   }
 
   private endGame(singlePlayerQuiz: SinglePlayerQuiz): void {
@@ -123,33 +171,11 @@ export class AsynchronousQuizGateway
       0,
       singlePlayerQuiz.currentQuestionIndex,
     );
-    this.server.to(singlePlayerQuiz.id).emit('gameEnded', {
+    this.server.to(singlePlayerQuiz.id).emit('singlePlayerQuiz:gameEnded', {
       results: answeredQuestions,
+      score: singlePlayerQuiz.player.score,
+      totalQuestions: this.questionsNumberInGame,
     });
+    this.singlePlayerQuizzes.delete(singlePlayerQuiz.id);
   }
-
-  // @SubscribeMessage('singlePlayerQuiz:submitAnswer')
-  // handleSubmitAnswer(
-  //   client: Socket,
-  //   payload: { roomId: string; answerIndex: number; currentPlayer: string },
-  // ): void {
-  //   const room = this.rooms.get(payload.roomId);
-  //   if (room && room.gameStarted) {
-  //     client.join(room.id);
-  //     const player = room.players.find((p) => p.name === payload.currentPlayer);
-  //     player.lastQuestionCorrect = false;
-  //     const question = room.questions[room.currentQuestionIndex];
-  //     if (player && question && !player.answered) {
-  //       player.answered = true;
-  //       if (payload.answerIndex === question.correctIndex) {
-  //         player.score += 1;
-  //         player.lastQuestionCorrect = true;
-  //       }
-  //       room.allPlayersAnsweredQuestion = room.players.every((p) => p.answered);
-  //       if (room.allPlayersAnsweredQuestion) {
-  //         this.revealAnswer(room);
-  //       }
-  //     }
-  //   }
-  // }
 }
