@@ -15,5 +15,51 @@ describe('Synchronous single player game', () => {
     cy.contains('h3', '(leicht)').should('exist')
     cy.contains('h2', 'Frage 1/10:').should('exist')
     cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 2/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 3/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 4/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 5/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 6/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 7/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 8/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 9/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h3', '(leicht)').should('exist')
+    cy.contains('h2', 'Frage 10/10:').should('exist')
+    cy.get('button').first().click()
+    cy.contains('button', 'Nächste Frage').click()
   })
 })
