@@ -67,3 +67,6 @@ cypress-open-ui:
 
 cypress-run-tests:
 	cd cypress-tests && npx cypress run
+
+cypress-test-asynchronous-game:
+	cd cypress-tests && npx cypress run --spec "cypress/e2e/asynchronous-game.cy.js"

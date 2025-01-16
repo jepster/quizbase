@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
 import ErrorModal from "@/app/components/ErrorModal";
+import Link from "next/link";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -287,6 +288,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten</button>
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
+          <Link href='/quiz/geschichte-im-mittelalter/low'>Asynchrones Spiel</Link>
         </>
       )}
 

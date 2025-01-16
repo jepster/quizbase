@@ -1,4 +1,4 @@
-describe('template spec', () => {
+describe('Synchronous single player game', () => {
   it('Login required', () => {
     cy.visit('http://172.17.30.97:9000/')
     cy.contains('Login')
