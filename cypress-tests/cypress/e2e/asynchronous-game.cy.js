@@ -8,6 +8,7 @@ describe('Synchronous single player game', () => {
         .type('sandra');
     cy.get('button').click()
 
+    cy.contains('a', 'Zur Startseite').should('exist')
     cy.get('input')
         .type('Peter');
     cy.get('button').click()
@@ -36,6 +37,7 @@ describe('Synchronous single player game', () => {
     cy.contains('h2', 'Frage 5/10:').should('exist')
     cy.get('button').first().click()
     cy.contains('button', 'Nächste Frage').click()
+    cy.contains('a', 'Zur Startseite').should('exist')
 
     cy.contains('h3', '(leicht)').should('exist')
     cy.contains('h2', 'Frage 6/10:').should('exist')
@@ -67,8 +69,10 @@ describe('Synchronous single player game', () => {
     cy.contains('h3', 'Bestenliste').should('exist')
     cy.contains('ul li', 'Peter').should('exist')
     cy.contains('ul li', 'Punkte').should('exist')
+    cy.contains('a', 'Zur Startseite').should('exist')
     cy.contains('button', 'Neues Spiel starten').click()
 
+    cy.contains('a', 'Zur Startseite').should('exist')
     cy.contains('h2', 'Spiel starten').should('exist')
   })
 })
