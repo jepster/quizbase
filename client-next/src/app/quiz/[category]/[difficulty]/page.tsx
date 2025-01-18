@@ -24,10 +24,12 @@ export default function AnsynchronousQuiz() {
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);
   const [explanation, setExplanation] = useState<string>('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
-  const [leaderboard, setLeaderboard] = useState<Array<{
-    name: string;
-    score: number;
-    lastQuestionCorrect: boolean
+  const [toplist, setToplist] = useState<Array<{
+    playerName: string,
+    score: number,
+    category: string,
+    difficulty: string,
+    playDate: Date
   }>>([]);
   const [singlePlayerQuizId, setSinglePlayerQuizId] = useState<string>('');
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
@@ -91,8 +93,22 @@ export default function AnsynchronousQuiz() {
     setAnswerSubmitted(true);
   };
 
-  const handleGameEnded = (data: { score: number, totalQuestions: number }) => {
+  const handleGameEnded = (data: {
+    results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }>,
+    score: number,
+    totalQuestions: number,
+    toplist: Array<{
+      playerName: string,
+      score: number,
+      category: string,
+      difficulty: string,
+      playDate: Date
+    }>
+  }) => {
+    debugger;
+    setGameState(gameStates.results);
     setScore(data.score);
+    setToplist(data.toplist);
   };
 
   const startGame = () => {
@@ -120,6 +136,16 @@ export default function AnsynchronousQuiz() {
   const readyForNextQuestion = () => {
     socket?.emit('singlePlayerQuiz:nextQuestion', singlePlayerQuizId);
   };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${day}.${month}.${year} - ${hours}:${minutes} Uhr`;
+  }
 
   return (
     <div className="h-screen flex justify-center">
@@ -189,6 +215,15 @@ export default function AnsynchronousQuiz() {
                 <>
                   <h2 className="text-2xl font-bold mb-4">Spielergebnis</h2>
                   <p>Dein Endergebnis: {score} von {totalQuestions} Punkten</p>
+                  <h3 className="text-xl font-bold mt-6 mb-2">Bestenliste</h3>
+                  <ul>
+                    {toplist.map((entry, index) => (
+                      <li key={index} className="mb-2">
+                        {entry.playerName}: {entry.score} Punkte
+                        ({formatDate(new Date(entry.playDate))})
+                      </li>
+                    ))}
+                  </ul>
                   <button
                     className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
                     onClick={() => setGameState(gameStates.start)}

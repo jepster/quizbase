@@ -4,6 +4,7 @@ import { SynchronousQuizGateway } from './synchronous-quiz.gateway';
 import { AsynchronousQuizGateway } from './asynchronous-quiz.gateway';
 import { PerplexityService } from './perplexity.service';
 import { QuestionDbService } from './question-db.service';
+import { SinglePlayerQuizDbService } from "./single-player-quiz-db.service";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { QuestionDbService } from './question-db.service';
     AsynchronousQuizGateway,
     PerplexityService,
     QuestionDbService,
+    SinglePlayerQuizDbService,
   ],
 })
 export class AppModule {}

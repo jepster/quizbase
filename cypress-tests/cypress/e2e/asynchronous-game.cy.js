@@ -61,5 +61,14 @@ describe('Synchronous single player game', () => {
     cy.contains('h2', 'Frage 10/10:').should('exist')
     cy.get('button').first().click()
     cy.contains('button', 'Nächste Frage').click()
+
+    cy.contains('h2', 'Spielergebnis').should('exist')
+    cy.contains('p', 'Dein Endergebnis:').should('exist')
+    cy.contains('h3', 'Bestenliste').should('exist')
+    cy.contains('ul li', 'Peter').should('exist')
+    cy.contains('ul li', 'Punkte').should('exist')
+    cy.contains('button', 'Neues Spiel starten').click()
+
+    cy.contains('h2', 'Spiel starten').should('exist')
   })
 })

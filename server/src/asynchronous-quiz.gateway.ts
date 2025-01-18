@@ -9,8 +9,9 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QuestionDbService } from './question-db.service';
+import { SinglePlayerQuizDbService } from './single-player-quiz-db.service';
 
-interface SinglePlayerQuiz {
+export interface SinglePlayerQuiz {
   id: string;
   category: string;
   questions: Question[];
@@ -58,6 +59,7 @@ export class AsynchronousQuizGateway
   constructor(
     private configService: ConfigService,
     private questionDbService: QuestionDbService,
+    private singlePlayerQuizDbService: SinglePlayerQuizDbService,
   ) {}
 
   handleConnection(client: Socket): void {
@@ -166,15 +168,22 @@ export class AsynchronousQuizGateway
     });
   }
 
-  private endGame(singlePlayerQuiz: SinglePlayerQuiz): void {
+  private async endGame(singlePlayerQuiz: SinglePlayerQuiz): Promise<void> {
     const answeredQuestions = singlePlayerQuiz.questions.slice(
       0,
       singlePlayerQuiz.currentQuestionIndex,
     );
+    await this.singlePlayerQuizDbService.storeQuizResult(singlePlayerQuiz);
+
+    const toplist = await this.singlePlayerQuizDbService.getToplist(
+      singlePlayerQuiz.category,
+    );
+
     this.server.to(singlePlayerQuiz.id).emit('singlePlayerQuiz:gameEnded', {
       results: answeredQuestions,
       score: singlePlayerQuiz.player.score,
       totalQuestions: this.questionsNumberInGame,
+      toplist: toplist,
     });
     this.singlePlayerQuizzes.delete(singlePlayerQuiz.id);
   }
