@@ -7,8 +7,7 @@ import { PerplexityService } from './perplexity.service';
   description: 'Imports questions from perplexity',
 })
 export class PerplexityCommand extends CommandRunner {
-  constructor(private perplexityService: PerplexityService) {
-    console.log('I am here');
+  constructor(private readonly perplexityService: PerplexityService) {
     super();
   }
 
@@ -28,8 +27,6 @@ export class PerplexityCommand extends CommandRunner {
     options?: { category: string; difficulty: string },
   ): Promise<void> {
     const categoryHumanReadable = options.category;
-
-    console.debug(categoryHumanReadable);
 
     await this.perplexityService.run(categoryHumanReadable);
   }

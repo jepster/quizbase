@@ -12,3 +12,9 @@ Rename them to
 * nginx.conf
 Deploy them and run `docker-compose up` on the digitalocean server. Afterwards we get the certs into the `certbot-conf` volume
 in the docker-compose setup. Then revert the docker-compose and nginx config file and redeploy.
+
+## Commands
+The nest.js commands can be run like this:
+```
+npm run build && node dist/cli.js perplexity-command --category="Ukrainekrieg"
+```

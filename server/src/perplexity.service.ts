@@ -99,8 +99,18 @@ export class PerplexityService {
       const db = client.db(this.dbName);
       const collection = db.collection(this.collectionName);
 
+      const requiredKeys = [
+        'question',
+        'options',
+        'correctIndex',
+        'explanation',
+        'difficulty',
+        'categoryHumanReadable',
+        'categoryMachineName',
+      ];
+
       for (const item of dataset) {
-        if (!item.explanation || item.explanation.trim() === '') {
+        if (!this.checkRequiredKeys(item, requiredKeys)) {
           this.skippedCount++;
           continue;
         }
@@ -137,5 +147,21 @@ export class PerplexityService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .replace(/-+/g, '-');
+  }
+
+  private checkRequiredKeys(obj: any, requiredKeys: string[]): boolean {
+    for (const key of requiredKeys) {
+      if (
+        !obj.hasOwnProperty(key) ||
+        obj[key] === null ||
+        obj[key] === undefined
+      ) {
+        return false;
+      }
+      if (typeof obj[key] === 'string' && obj[key].trim() === '') {
+        return false;
+      }
+    }
+    return true;
   }
 }
