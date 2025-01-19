@@ -53,7 +53,9 @@ export class PerplexityService {
             categoryHumanReadable +
             ' und der Schwierigkeitsgrad: ' +
             difficulty +
-            '. Bitte achte auf korrekte deutsche Rechtschreibung. Hier ist ein Beispiel für den Aufbau: ' +
+            '. Bitte achte auf korrekte deutsche Rechtschreibung. Die Kategorie soll ausdrücklich nur ' +
+            categoryHumanReadable +
+            ' sein. Keine anderen Kategorien. Bitte erzeuge keine Verweise oder Links zu Inhalten. Hier ist ein Beispiel für den Aufbau: ' +
             '{"question": "Welchen ungewöhnlichen Beruf hatte Tino Chrupalla vor seiner politischen Karriere?",' +
             '"options": ["Malermeister", "Zirkusclown", "Imker"],' +
             '"correctIndex": 0,' +

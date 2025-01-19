@@ -12,8 +12,8 @@ describe('PerplexityService Integration', () => {
   let consoleLogSpy;
   let questionDbService: QuestionDbService;
 
-  let categoryHumanReadable = 'Gina Wild schluckt Sperma';
-  let categoryMachineName = 'gina-wild-schluckt-sperma';
+  const categoryHumanReadable = 'Wandern im Sauerland';
+  const categoryMachineName = 'wandern-im-sauerland';
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +38,7 @@ describe('PerplexityService Integration', () => {
   afterAll(async () => {
     await mongoClient.close();
     consoleLogSpy.mockRestore();
-    //await questionDbService.deleteCategory('Geschichten aus dem Mittelalter');
+    await questionDbService.deleteCategory(categoryHumanReadable);
   });
 
   it('Check perplexity service', async () => {
@@ -54,9 +54,7 @@ describe('PerplexityService Integration', () => {
       categoryHumanReadable: category,
     });
 
-    expect(document.categoryMachineName).toBe(
-      categoryMachineName,
-    );
+    expect(document.categoryMachineName).toBe(categoryMachineName);
 
     const updatedCategories = await questionDbService.loadCategories();
     const numUpdatedCategories = updatedCategories.length;
