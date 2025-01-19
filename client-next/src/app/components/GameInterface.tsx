@@ -7,7 +7,7 @@ import DifficultySelector from "@/app/components/DifficultySelector";
 import Modal from 'react-modal';
 import HackerMode from "@/app/components/HackerMode";
 import { useHackerMode } from "@/app/components/HackerMode";
-import DropButton from "@/app/components/DropButton";
+import DeleteButton from "@/app/components/DeleteButton";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -347,12 +347,12 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
               {!isHackerMode ? (
                 <button
                   onClick={() => handleAsyncCategorySelect(category.categoryMachineName)}
-                  className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                  className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
                 >
                   {category.categoryHumanReadable}
                 </button>
               ) : (
-                <DropButton onDelete={handleDelete} buttonText={category.categoryHumanReadable} />
+                <DeleteButton onDelete={handleDelete} buttonText={category.categoryHumanReadable} />
               )}
             </React.Fragment>
           ))}
