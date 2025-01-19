@@ -70,12 +70,9 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       socket.on('answerRevealed', handleAnswerRevealed);
       socket.on('gameEnded', handleGameEnded);
       socket.on('newGameStarted', handleNewGameStarted);
-      socket.on('gameEnded', (data) => {
-        setLeaderboard(data.leaderboard);
-        setResults(data.results);
-        setGameState(gameStates.results);
-      });
       socket.on('categoryCreated', handleCategoryCreated);
+      socket.on('categoryDeleted', handleCategoryDeleted);
+
       (async () => {
         socket.emit('getCategories', (categories: Array<{ categoryMachineName: string, categoryHumanReadable: string }>) => {
           setCategories(categories);
@@ -93,9 +90,16 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         socket.off('newGameStarted', handleNewGameStarted);
         socket.off('gameEnded');
         socket.off('categoryCreated');
+        socket.off('categoryDeleted', handleCategoryDeleted);
       };
     }
   }, [socket, playerName]);
+
+  const handleCategoryDeleted = (data: { message: string, categories: Array<{ categoryMachineName: string, categoryHumanReadable: string }> }) => {
+    setSuccessMessage(data.message);
+    setIsSuccessModalOpen(true);
+    setCategories(data.categories);
+  };
 
   const handlePlayerJoined = (data: { player: string, players: Array<{ name: string; ready: boolean }> }) => {
     if (playerName !== data.player) {
@@ -318,8 +322,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     socket?.emit('difficultySelected', { roomId: roomId, difficulty });
   };
 
-  const handleDelete = () => {
-    console.log('Delete action triggered');
+  const handleDelete = (categoryHumanReadable: string) => {
+    socket?.emit('deleteCategory', categoryHumanReadable);
   };
 
   return (
@@ -352,7 +356,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
                   {category.categoryHumanReadable}
                 </button>
               ) : (
-                <DeleteButton onDelete={handleDelete} buttonText={category.categoryHumanReadable} />
+                <DeleteButton onDelete={() => handleDelete(category.categoryHumanReadable)} categoryHumanReadable={category.categoryHumanReadable} />
               )}
             </React.Fragment>
           ))}

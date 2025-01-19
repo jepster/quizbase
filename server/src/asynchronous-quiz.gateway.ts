@@ -148,6 +148,24 @@ export class AsynchronousQuizGateway
     return this.questionDbService.loadCategoriesWithMachineNames();
   }
 
+  @SubscribeMessage('deleteCategory')
+  async handleDeleteCategory(
+    client: Socket,
+    categoryHumanReadable: string,
+  ): Promise<boolean> {
+    const result = await this.questionDbService.deleteCategory(
+      categoryHumanReadable,
+    );
+    if (result) {
+      client.emit('categoryDeleted', {
+        message: `Die Kategorie "${categoryHumanReadable}" wurde erfolgreich gelöscht.`,
+        categories:
+          await this.questionDbService.loadCategoriesWithMachineNames(),
+      });
+    }
+    return result;
+  }
+
   private askNextQuestion(client: Socket, quizId: string): void {
     const singlePlayerQuiz = this.singlePlayerQuizzes.get(quizId);
     if (singlePlayerQuiz.currentQuestionIndex < this.questionsNumberInGame) {

@@ -2,10 +2,10 @@ import React from 'react';
 
 interface DropButtonProps {
   onDelete: () => void;
-  buttonText: string;
+  categoryHumanReadable: string;
 }
 
-const DeleteButton: React.FC<DropButtonProps> = ({ onDelete, buttonText }) => {
+const DeleteButton: React.FC<DropButtonProps> = ({ onDelete, categoryHumanReadable }) => {
   const handleDelete = () => {
     onDelete();
   };
@@ -15,7 +15,7 @@ const DeleteButton: React.FC<DropButtonProps> = ({ onDelete, buttonText }) => {
       onClick={handleDelete}
       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2"
     >
-      {buttonText}
+      {categoryHumanReadable}
     </button>
   );
 };

@@ -91,6 +91,17 @@ export class QuestionDbService {
     }
   }
 
+  public async deleteCategory(categoryHumanReadable: string): Promise<boolean> {
+    try {
+      const collection = await this.getMongoDbCollection();
+      const result = await collection.deleteMany({ categoryHumanReadable: categoryHumanReadable });
+      return result.deletedCount > 0;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      return false;
+    }
+  }
+
   private removeDuplicates(questions: Question[]): Question[] {
     const seen = new Set();
     return questions.filter((q) => {
