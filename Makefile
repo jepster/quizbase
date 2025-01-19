@@ -70,3 +70,6 @@ cypress-run-tests:
 
 cypress-test-asynchronous-game:
 	cd cypress-tests && npx cypress run --spec "cypress/e2e/asynchronous-game.cy.js"
+
+test-integration:
+	cd server && npm run test:integration

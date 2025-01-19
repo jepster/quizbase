@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OpenAI } from 'openai';
 import { MongoClient } from 'mongodb';
+import { LoggerService } from './logger.service';
 
 @Injectable()
 export class PerplexityService {
@@ -11,7 +12,10 @@ export class PerplexityService {
   private skippedCount = 0;
   private readonly mongoUri = '';
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private loggerService: LoggerService,
+  ) {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
@@ -80,8 +84,8 @@ export class PerplexityService {
         throw new Error('No JSON array found in the response');
       }
     } catch (error) {
-      console.error('Error parsing JSON:', error);
-      console.log('Raw content:', content);
+      this.loggerService.error('Error parsing JSON: ' + error);
+      this.loggerService.log('Raw content: ' + content);
     }
   }
 
@@ -112,12 +116,12 @@ export class PerplexityService {
         }
       }
 
-      console.log(`${this.insertedCount} documents were inserted`);
-      console.log(
+      this.loggerService.log(`${this.insertedCount} documents were inserted`);
+      this.loggerService.log(
         `${this.skippedCount} documents were skipped (empty explanation or already exist)`,
       );
     } catch (error) {
-      console.error('Error storing data in MongoDB:', error);
+      this.loggerService.error('Error storing data in MongoDB: ' + error);
     } finally {
       await client.close();
     }

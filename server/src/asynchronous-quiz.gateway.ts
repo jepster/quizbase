@@ -140,9 +140,7 @@ export class AsynchronousQuizGateway
   }
 
   @SubscribeMessage('getCategories')
-  async getCategories(
-    client: Socket,
-  ): Promise<
+  async getCategories(): Promise<
     Array<{ categoryMachineName: string; categoryHumanReadable: string }>
   > {
     return this.questionDbService.loadCategoriesWithMachineNames();

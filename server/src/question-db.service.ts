@@ -121,7 +121,6 @@ export class QuestionDbService {
 
   private async getMongoDbCollection(): Promise<Collection> {
     const client = new MongoClient(this.mongoUri);
-    await client.connect();
     const db = client.db(this.dbName);
     return db.collection(this.collectionName);
   }
