@@ -178,7 +178,7 @@ export class SynchronousQuizGateway
     if (room) {
       client.join(room.id);
       room.selectedCategory = payload.categoryHumanReadable;
-      this.server.to(room.id).emit('selectDifficulty', {
+      this.server.to(room.id).emit('selectDifficultySynchronous', {
         categoryHumanReadable: room.selectedCategory,
         playerIndex: room.categorySelectionIndex,
         playerName: room.players[room.categorySelectionIndex].name,
@@ -193,7 +193,7 @@ export class SynchronousQuizGateway
     payload: { category: string },
   ): Promise<void> {
     await this.perplexityService.run(payload.category);
-    client.emit('categoryCreated');
+    client.emit('categoryCreated', { category: payload.category });
   }
 
   @SubscribeMessage('showResultAfterLastReply')

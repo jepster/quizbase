@@ -40,7 +40,6 @@ export class QuestionDbService {
     });
   }
 
-
   public async loadCategories(): Promise<string[]> {
     try {
       const collection = await this.getMongoDbCollection();
@@ -48,6 +47,47 @@ export class QuestionDbService {
       return allCategories.filter((category) => category.length > 1);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  }
+
+  public async loadCategoriesWithMachineNames(): Promise<
+    Array<{ categoryMachineName: string; categoryHumanReadable: string }>
+  > {
+    try {
+      const collection = await this.getMongoDbCollection();
+      const categories = await collection
+        .aggregate([
+          {
+            $group: {
+              _id: {
+                machine: '$categoryMachineName',
+                human: '$categoryHumanReadable',
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              categoryMachineName: '$_id.machine',
+              categoryHumanReadable: '$_id.human',
+            },
+          },
+        ])
+        .toArray();
+
+      return categories
+        .filter(
+          (category) =>
+            category.categoryHumanReadable &&
+            category.categoryHumanReadable.length > 1,
+        )
+        .map((category) => ({
+          categoryMachineName: category.categoryMachineName as string,
+          categoryHumanReadable: category.categoryHumanReadable as string,
+        }));
+    } catch (error) {
+      console.error('Error fetching categories with machine names:', error);
+      return [];
     }
   }
 

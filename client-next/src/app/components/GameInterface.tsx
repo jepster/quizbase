@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
-import ErrorModal from "@/app/components/ErrorModal";
-import Link from "next/link";
+import ErrorModal from "@/app/components/modal/ErrorModal";
+import SuccessModal from "@/app/components/modal/SuccessModal";
+import { useRouter } from 'next/navigation';
+import DifficultySelector from "@/app/components/DifficultySelector";
+import Modal from 'react-modal';
+import HackerMode from "@/app/components/HackerMode";
+import { useHackerMode } from "@/app/components/HackerMode";
+import DropButton from "@/app/components/DropButton";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -17,12 +23,13 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>('');
   const [difficulty, setDifficulty] = useState<string>('');
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
   const [leaderboard, setLeaderboard] = useState<Array<{ name: string; score: number; lastQuestionCorrect: boolean }>>([]);
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -33,6 +40,9 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
   const [allPlayersAnsweredQuestion, setAllPlayersAnsweredQuestion] = useState<boolean>(false);
+  const [categories, setCategories] = useState<Array<{ categoryMachineName: string, categoryHumanReadable: string }>>([]);
+  const router = useRouter();
+  const isHackerMode = useHackerMode();
 
   const gameStates = {
     start: 'start',
@@ -40,7 +50,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     waitingRoom: 'waiting-room',
     categorySelection: 'category-selection',
     categorySelectionWaiting: 'category-selection-waiting',
-    selectDifficulty: 'select-difficulty',
+    selectDifficultySynchronous: 'select-difficulty-synchronous',
+    selectDifficultyAsynchronous: 'select-difficulty-asynchronous',
     selectDifficultyWaiting: 'select-difficulty-waiting',
     game: 'game',
     results: 'results',
@@ -54,7 +65,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('playerReady', handlePlayerReady);
       socket.on('selectCategory', handleSelectCategory);
-      socket.on('selectDifficulty', handleSelectDifficulty);
+      socket.on('selectDifficultySynchronous', handleSelectDifficultySynchronous);
       socket.on('newQuestion', handleNewQuestion);
       socket.on('answerRevealed', handleAnswerRevealed);
       socket.on('gameEnded', handleGameEnded);
@@ -64,16 +75,18 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         setResults(data.results);
         setGameState(gameStates.results);
       });
-      socket.on('categoryCreated', () => {
-        setIsLoading(false);
-        setGameState(gameStates.start);
-      });
+      socket.on('categoryCreated', handleCategoryCreated);
+      (async () => {
+        socket.emit('getCategories', (categories: Array<{ categoryMachineName: string, categoryHumanReadable: string }>) => {
+          setCategories(categories);
+        });
+      })();
 
       return () => {
         socket.off('playerJoined', handlePlayerJoined);
         socket.off('playerReady', handlePlayerReady);
         socket.off('selectCategory', handleSelectCategory);
-        socket.off('selectDifficulty', handleSelectDifficulty);
+        socket.off('selectDifficultySynchronous', handleSelectDifficultySynchronous);
         socket.off('newQuestion', handleNewQuestion);
         socket.off('answerRevealed', handleAnswerRevealed);
         socket.off('gameEnded', handleGameEnded);
@@ -103,20 +116,37 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const handleSelectCategory = (data: { playerName: string, categories: string[] }) => {
     if (data.playerName === playerName) {
       setGameState(gameStates.categorySelection);
-      setCategories(data.categories);
     } else {
       setGameState(gameStates.categorySelectionWaiting);
     }
   };
 
-  const handleSelectDifficulty = (data: { playerName: string, categoryName: string, difficulty: string }) => {
+  const handleSelectDifficultySynchronous = (data: { playerName: string, categoryName: string, difficulty: string }) => {
     setCategory(data.categoryName);
     if (data.playerName === playerName) {
-      setGameState(gameStates.selectDifficulty);
+      setGameState(gameStates.selectDifficultySynchronous);
     } else {
       setGameState(gameStates.selectDifficultyWaiting);
     }
   };
+
+  const handleCategoryCreated = (data: {category: string}) => {
+    setIsLoading(false);
+    setGameState(gameStates.start);
+    if (socket) {
+      (async () => {
+        socket.emit('getCategories', (categories: Array<{
+          categoryMachineName: string,
+          categoryHumanReadable: string
+        }>) => {
+          setCategories(categories);
+        });
+      })();
+    }
+    setSuccessMessage(`Kategorie "${data.category}" erfolgreich erstellt.`);
+    setIsSuccessModalOpen(true);
+    Modal.setAppElement('#root');
+  }
 
   const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
     setQuestion(data.question);
@@ -194,10 +224,6 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     socket?.emit('categorySelected', { roomId: roomId, categoryHumanReadable: categoryHumanReadable });
   };
 
-  const selectDifficulty = (difficulty: string) => {
-    socket?.emit('difficultySelected', { roomId: roomId, difficulty });
-  };
-
   const submitAnswer = (index: number) => {
     setLastSubmittedAnswer(index);
     socket?.emit('submitAnswer', { roomId: roomId, answerIndex: index, currentPlayer: playerName });
@@ -215,7 +241,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
 
   const showError = (message: string) => {
     setErrorMessage(message);
-    setIsModalOpen(true);
+    setIsErrorModalOpen(true);
+    Modal.setAppElement('#root');
   };
 
   const createCategory = () => {
@@ -278,30 +305,73 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     document.body.removeChild(textArea);
   };
 
+  const handleAsyncCategorySelect = (category: string) => {
+    setCategory(category);
+    setGameState(gameStates.selectDifficultyAsynchronous);
+  };
+
+  const handleDifficultySelectAsynchronous = (difficulty: string) => {
+    router.push(`/quiz/${encodeURIComponent(category)}/${difficulty}`);
+  };
+
+  const handleDifficultySelectSynchronous = (difficulty: string) => {
+    socket?.emit('difficultySelected', { roomId: roomId, difficulty });
+  };
+
+  const handleDelete = () => {
+    console.log('Delete action triggered');
+  };
 
   return (
     <>
-      <ErrorModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} errorMessage={errorMessage} />
+      <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
+      <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
+      <HackerMode />
 
       {gameState === gameStates.start && (
         <>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen</button>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten</button>
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2" onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen</button>
-          <Link href='/quiz/geschichte-im-mittelalter/low'>Asynchrones Spiel</Link>
-        </>
-      )}
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Quizmaster</h1>
+        <h2 className="text-2xl font-bold text-gray-800">Synchrone Spiele</h2>
+        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen
+        </button>
+        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten
+        </button>
+        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
+        </button>
+          <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
+          {categories.map((category, index) => (
+            <React.Fragment key={index}>
+              {!isHackerMode ? (
+                <button
+                  onClick={() => handleAsyncCategorySelect(category.categoryMachineName)}
+                  className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                >
+                  {category.categoryHumanReadable}
+                </button>
+              ) : (
+                <DropButton onDelete={handleDelete} buttonText={category.categoryHumanReadable} />
+              )}
+            </React.Fragment>
+          ))}
 
-      {gameState === gameStates.roomCreation && (
-        <>
-          <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
-          <input
-            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
-            placeholder="Dein Name"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-          />
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
+    </>
+  )
+}
+
+{
+  gameState === gameStates.roomCreation && (
+    <>
+      <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
+      <input
+        className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+        placeholder="Dein Name"
+        value={playerName}
+        onChange={(e) => setPlayerName(e.target.value)}
+      />
+      <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
         </>
       )}
 
@@ -343,11 +413,15 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       {gameState === gameStates.categorySelection && (
         <>
           <h2 className="text-2xl font-bold mb-4">Wähle eine Kategorie</h2>
-          <p className="text-xl font-bold mb-2">{playerName}, wähle eine Kategorie:</p>
           <div className="flex flex-wrap justify-center">
-            {categories.map((cat, index) => (
-              <button key={index} className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded"
-                      onClick={() => selectCategory(cat)}>{cat}</button>
+            {categories.map((category, index) => (
+              <button
+                key={index}
+                onClick={() => selectCategory(category.categoryHumanReadable)}
+                className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded"
+              >
+                {category.categoryHumanReadable}
+              </button>
             ))}
           </div>
         </>
@@ -359,19 +433,12 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         </>
       )}
 
-      {gameState === gameStates.selectDifficulty && (
-        <>
-          <h2 className="text-2xl font-bold mb-4">Wähle den Schwierigkeitsgrad</h2>
-          <p className="text-xl font-bold mb-2">{playerName}, deine Auswahl:</p>
-          <div className="flex flex-wrap justify-center">
-            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded"
-                    onClick={() => selectDifficulty('high')}>Schwer
-            </button>
-            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded"
-                    onClick={() => selectDifficulty('low')}>Leicht
-            </button>
-          </div>
-        </>
+      {gameState === gameStates.selectDifficultySynchronous && (
+        <DifficultySelector onSelect={handleDifficultySelectSynchronous} />
+      )}
+
+      {gameState === gameStates.selectDifficultyAsynchronous && (
+        <DifficultySelector onSelect={handleDifficultySelectAsynchronous} />
       )}
 
       {gameState === gameStates.selectDifficultyWaiting && (

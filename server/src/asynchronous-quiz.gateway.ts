@@ -139,6 +139,15 @@ export class AsynchronousQuizGateway
     }
   }
 
+  @SubscribeMessage('getCategories')
+  async getCategories(
+    client: Socket,
+  ): Promise<
+    Array<{ categoryMachineName: string; categoryHumanReadable: string }>
+  > {
+    return this.questionDbService.loadCategoriesWithMachineNames();
+  }
+
   private askNextQuestion(client: Socket, quizId: string): void {
     const singlePlayerQuiz = this.singlePlayerQuizzes.get(quizId);
     if (singlePlayerQuiz.currentQuestionIndex < this.questionsNumberInGame) {

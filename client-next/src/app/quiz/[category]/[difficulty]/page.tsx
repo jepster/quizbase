@@ -3,7 +3,7 @@
 import {useParams} from 'next/navigation';
 import {useEffect, useState} from "react";
 import {useSocket} from "@/app/hooks/useSocket";
-import ErrorModal from "@/app/components/ErrorModal";
+import ErrorModal from "@/app/components/modal/ErrorModal";
 import LoginForm from "@/app/components/LoginForm";
 import Link from "next/link";
 
@@ -106,7 +106,6 @@ export default function AnsynchronousQuiz() {
       playDate: Date
     }>
   }) => {
-    debugger;
     setGameState(gameStates.results);
     setScore(data.score);
     setToplist(data.toplist);
