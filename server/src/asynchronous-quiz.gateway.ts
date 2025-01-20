@@ -10,10 +10,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QuestionDbService } from './question-db.service';
 import { SinglePlayerQuizDbService } from './single-player-quiz-db.service';
+import Category from './types/category';
 
 export interface SinglePlayerQuiz {
   id: string;
-  category: string;
+  category: Category;
   questions: Question[];
   currentQuestionIndex: number;
   gameStarted: boolean;
@@ -73,7 +74,7 @@ export class AsynchronousQuizGateway
   @SubscribeMessage('singlePlayerQuiz:create')
   async createSinglePlayerQuiz(
     client: Socket,
-    payload: { category: string; playerName: string; difficulty: string },
+    payload: { category: Category; playerName: string; difficulty: string },
   ): Promise<SinglePlayerQuiz> {
     const singlePlayerQuizId = crypto.randomUUID();
     const player: Player = {
@@ -86,7 +87,7 @@ export class AsynchronousQuizGateway
     };
     const questions =
       await this.questionDbService.getQuestionsByCategoryMachineName(
-        payload.category,
+        payload.category.machineName,
         payload.difficulty,
       );
 
@@ -140,25 +141,20 @@ export class AsynchronousQuizGateway
   }
 
   @SubscribeMessage('getCategories')
-  async getCategories(): Promise<
-    Array<{ categoryMachineName: string; categoryHumanReadable: string }>
-  > {
-    return this.questionDbService.loadCategoriesWithMachineNames();
+  async getCategories(): Promise<Category[]> {
+    return this.questionDbService.loadCategories();
   }
 
   @SubscribeMessage('deleteCategory')
   async handleDeleteCategory(
     client: Socket,
-    categoryHumanReadable: string,
+    category: Category,
   ): Promise<boolean> {
-    const result = await this.questionDbService.deleteCategory(
-      categoryHumanReadable,
-    );
+    const result = await this.questionDbService.deleteCategory(category);
     if (result) {
       client.emit('categoryDeleted', {
-        message: `Die Kategorie "${categoryHumanReadable}" wurde erfolgreich gelöscht.`,
-        categories:
-          await this.questionDbService.loadCategoriesWithMachineNames(),
+        message: `Die Kategorie "${category.humanReadableName}" wurde erfolgreich gelöscht.`,
+        categories: await this.questionDbService.loadCategories(),
       });
     }
     return result;

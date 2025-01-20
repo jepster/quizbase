@@ -1,6 +1,7 @@
 import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import Category from './types/category';
 
 interface Question {
   question: string;
@@ -31,28 +32,16 @@ export class QuestionDbService {
   }
 
   public async getQuestionsByHumanReadableCategory(
-    categoryHumanReadable: string,
+    category: Category,
     difficulty: string,
   ): Promise<Question[]> {
     return this.fetchAndProcessQuestions({
-      categoryHumanReadable: categoryHumanReadable,
+      categoryHumanReadable: category.humanReadableName,
       difficulty: difficulty,
     });
   }
 
-  public async loadCategories(): Promise<string[]> {
-    try {
-      const collection = await this.getMongoDbCollection();
-      const allCategories = await collection.distinct('categoryHumanReadable');
-      return allCategories.filter((category) => category.length > 1);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  }
-
-  public async loadCategoriesWithMachineNames(): Promise<
-    Array<{ categoryMachineName: string; categoryHumanReadable: string }>
-  > {
+  public async loadCategories(): Promise<Category[]> {
     try {
       const collection = await this.getMongoDbCollection();
       const categories = await collection
@@ -82,8 +71,8 @@ export class QuestionDbService {
             category.categoryHumanReadable.length > 1,
         )
         .map((category) => ({
-          categoryMachineName: category.categoryMachineName as string,
-          categoryHumanReadable: category.categoryHumanReadable as string,
+          machineName: category.categoryMachineName as string,
+          humanReadableName: category.categoryHumanReadable as string,
         }));
     } catch (error) {
       console.error('Error fetching categories with machine names:', error);
@@ -91,10 +80,12 @@ export class QuestionDbService {
     }
   }
 
-  public async deleteCategory(categoryHumanReadable: string): Promise<boolean> {
+  public async deleteCategory(category: Category): Promise<boolean> {
     try {
       const collection = await this.getMongoDbCollection();
-      const result = await collection.deleteMany({ categoryHumanReadable: categoryHumanReadable });
+      const result = await collection.deleteMany({
+        categoryHumanReadable: category.humanReadableName,
+      });
       return result.deletedCount > 0;
     } catch (error) {
       console.error('Error deleting category:', error);

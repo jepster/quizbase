@@ -7,9 +7,9 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PerplexityService } from './perplexity.service';
 import { QuestionDbService } from './question-db.service';
+import Category from './types/category';
 
 interface Room {
   id: string;
@@ -19,7 +19,7 @@ interface Room {
   gameStarted: boolean;
   answersReceived: number;
   categorySelectionIndex: number;
-  selectedCategory: string;
+  selectedCategory: Category;
   readyForNextQuestion: number;
   difficulty: string;
   allPlayersAnsweredQuestion: boolean;
@@ -54,7 +54,7 @@ export class SynchronousQuizGateway
   server: Server;
 
   private rooms: Map<string, Room> = new Map();
-  private categories: string[];
+  private categories: Category[];
   private questionsNumberInGame: number = 10;
 
   constructor(
@@ -69,17 +69,11 @@ export class SynchronousQuizGateway
   ): Promise<void> {
     const room = this.rooms.get(payload.roomId);
     if (room) {
-      const categoryHumanReadable = this.categories.find(
-        (c) => c === room.selectedCategory,
-      );
-
       room.difficulty = payload.difficulty;
-      const roomDifficulty = room.difficulty;
-
       room.questions =
         await this.questionDbService.getQuestionsByHumanReadableCategory(
-          categoryHumanReadable,
-          roomDifficulty,
+          room.selectedCategory,
+          room.difficulty,
         );
       room.currentQuestionIndex = 0;
       room.gameStarted = true;
@@ -98,7 +92,7 @@ export class SynchronousQuizGateway
       gameStarted: false,
       answersReceived: 0,
       categorySelectionIndex: 0,
-      selectedCategory: '',
+      selectedCategory: null,
       readyForNextQuestion: 0,
       difficulty: '',
       allPlayersAnsweredQuestion: false,
@@ -172,14 +166,14 @@ export class SynchronousQuizGateway
   @SubscribeMessage('categorySelected')
   handleCategorySelected(
     client: Socket,
-    payload: { roomId: string; categoryHumanReadable: string },
+    payload: { roomId: string; category: Category },
   ): void {
     const room = this.rooms.get(payload.roomId);
     if (room) {
       client.join(room.id);
-      room.selectedCategory = payload.categoryHumanReadable;
+      room.selectedCategory = payload.category;
       this.server.to(room.id).emit('selectDifficultySynchronous', {
-        categoryHumanReadable: room.selectedCategory,
+        category: room.selectedCategory,
         playerIndex: room.categorySelectionIndex,
         playerName: room.players[room.categorySelectionIndex].name,
         difficulty: room.difficulty,
@@ -190,9 +184,9 @@ export class SynchronousQuizGateway
   @SubscribeMessage('createCustomCategory')
   async createCustomCategory(
     client: Socket,
-    payload: { category: string },
+    payload: { category: Category },
   ): Promise<void> {
-    await this.perplexityService.run(payload.category);
+    await this.perplexityService.run(payload.category.humanReadableName);
     client.emit('categoryCreated', { category: payload.category });
   }
 
@@ -260,7 +254,7 @@ export class SynchronousQuizGateway
       room.gameStarted = false;
       room.answersReceived = 0;
       room.readyForNextQuestion = 0;
-      room.selectedCategory = '';
+      room.selectedCategory = null;
       this.server.to(roomId).emit('newGameStarted', room.players);
     }
   }
@@ -313,7 +307,7 @@ export class SynchronousQuizGateway
       this.server.to(room.id).emit('newQuestion', {
         question: question.question,
         options: question.options,
-        categoryName: room.selectedCategory,
+        category: room.selectedCategory,
         difficulty: room.difficulty,
         totalQuestionsCount: room.questions.length,
       });

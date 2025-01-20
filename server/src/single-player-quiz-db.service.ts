@@ -2,6 +2,7 @@ import { Collection, MongoClient } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SinglePlayerQuiz } from './asynchronous-quiz.gateway';
+import Category from "./types/category";
 
 interface QuizResult {
   playerName: string;
@@ -30,7 +31,7 @@ export class SinglePlayerQuizDbService {
   }
 
   public async getToplist(
-    category: string,
+    category: Category,
     limit: number = 10,
   ): Promise<QuizResult[]> {
     const collection = await this.getMongoDbCollection();

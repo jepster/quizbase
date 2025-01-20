@@ -8,6 +8,7 @@ import Modal from 'react-modal';
 import HackerMode from "@/app/components/HackerMode";
 import { useHackerMode } from "@/app/components/HackerMode";
 import DeleteButton from "@/app/components/DeleteButton";
+import Category from "@/app/components/types/category";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -23,7 +24,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
-  const [category, setCategory] = useState<string>('');
+  const [category, setCategory] = useState<Category | null>(null);
   const [difficulty, setDifficulty] = useState<string>('');
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
@@ -40,7 +41,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [copyToClipboardLabel, setCopyToClipboardLabel] = useState<string>('Link kopieren');
   const [allPlayersAnsweredQuestion, setAllPlayersAnsweredQuestion] = useState<boolean>(false);
-  const [categories, setCategories] = useState<Array<{ categoryMachineName: string, categoryHumanReadable: string }>>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
   const isHackerMode = useHackerMode();
 
@@ -73,11 +74,9 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       socket.on('categoryCreated', handleCategoryCreated);
       socket.on('categoryDeleted', handleCategoryDeleted);
 
-      (async () => {
-        socket.emit('getCategories', (categories: Array<{ categoryMachineName: string, categoryHumanReadable: string }>) => {
-          setCategories(categories);
-        });
-      })();
+      socket.emit('getCategories', (categories: Category[]) => {
+        setCategories(categories);
+      });
 
       return () => {
         socket.off('playerJoined', handlePlayerJoined);
@@ -88,14 +87,13 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         socket.off('answerRevealed', handleAnswerRevealed);
         socket.off('gameEnded', handleGameEnded);
         socket.off('newGameStarted', handleNewGameStarted);
-        socket.off('gameEnded');
         socket.off('categoryCreated');
         socket.off('categoryDeleted', handleCategoryDeleted);
       };
     }
   }, [socket, playerName]);
 
-  const handleCategoryDeleted = (data: { message: string, categories: Array<{ categoryMachineName: string, categoryHumanReadable: string }> }) => {
+  const handleCategoryDeleted = (data: { message: string, categories: Category[] }) => {
     setSuccessMessage(data.message);
     setIsSuccessModalOpen(true);
     setCategories(data.categories);
@@ -117,7 +115,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     }
   };
 
-  const handleSelectCategory = (data: { playerName: string, categories: string[] }) => {
+  const handleSelectCategory = (data: { playerName: string, categories: Category[] }) => {
     if (data.playerName === playerName) {
       setGameState(gameStates.categorySelection);
     } else {
@@ -125,8 +123,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     }
   };
 
-  const handleSelectDifficultySynchronous = (data: { playerName: string, categoryName: string, difficulty: string }) => {
-    setCategory(data.categoryName);
+  const handleSelectDifficultySynchronous = (data: { playerName: string, category: Category, difficulty: string }) => {
+    setCategory(data.category);
     if (data.playerName === playerName) {
       setGameState(gameStates.selectDifficultySynchronous);
     } else {
@@ -134,22 +132,18 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     }
   };
 
-  const handleCategoryCreated = (data: {category: string}) => {
+  const handleCategoryCreated = (data: {category: Category}) => {
     setIsLoading(false);
     setGameState(gameStates.start);
     if (socket) {
-      (async () => {
-        socket.emit('getCategories', (categories: Array<{
-          categoryMachineName: string,
-          categoryHumanReadable: string
-        }>) => {
-          setCategories(categories);
-        });
-      })();
+      socket.emit('getCategories', (categories: Category[]) => {
+        setCategories(categories);
+      });
     }
-    setSuccessMessage(`Kategorie "${data.category}" erfolgreich erstellt.`);
+    setSuccessMessage(`Kategorie "${data.category.humanReadableName}" erfolgreich erstellt.`);
     setIsSuccessModalOpen(true);
     Modal.setAppElement('#root');
+    setCategory(null);
   }
 
   const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
@@ -175,7 +169,9 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
 
   const handleGameEnded = (data: { leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }>, results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }> }) => {
     setLeaderboard(data.leaderboard);
+    setResults(data.results);
     setGameState(gameStates.results);
+    setCurrentQuestionIndex(0);
   };
 
   const handleNewGameStarted = (players: Array<{ name: string; ready: boolean }>) => {
@@ -224,8 +220,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     socket?.emit('playerReady', { roomId: roomId, playerName });
   };
 
-  const selectCategory = (categoryHumanReadable: string) => {
-    socket?.emit('categorySelected', { roomId: roomId, categoryHumanReadable: categoryHumanReadable });
+  const selectCategory = (category: Category) => {
+    socket?.emit('categorySelected', { roomId: roomId, category: category });
   };
 
   const submitAnswer = (index: number) => {
@@ -250,7 +246,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   };
 
   const createCategory = () => {
-    if (category.trim() === '') {
+    if (!category || category.humanReadableName.trim() === '') {
       showError('Bitte gib einen Kategorienamen ein.');
       return;
     }
@@ -262,9 +258,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     const currentDomain = window.location.origin;
     const shareUrl = `${currentDomain}?roomId=${roomId}`;
     const encodedShareUrl = encodeURIComponent(shareUrl);
-
     const whatsappUrl = `https://wa.me/?text=Join%20my%20quiz%20game!%20${encodedShareUrl}`;
-
     window.open(whatsappUrl, '_blank');
   }
 
@@ -309,73 +303,85 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     document.body.removeChild(textArea);
   };
 
-  const handleAsyncCategorySelect = (category: string) => {
+  const handleAsyncCategorySelect = (category: Category) => {
     setCategory(category);
     setGameState(gameStates.selectDifficultyAsynchronous);
   };
 
   const handleDifficultySelectAsynchronous = (difficulty: string) => {
-    router.push(`/quiz/${encodeURIComponent(category)}/${difficulty}`);
+    if (category === null) {
+      throw new Error('Category must be set to handle difficulty.');
+    }
+    router.push(`/quiz/${encodeURIComponent(category.machineName)}/${difficulty}`);
   };
 
   const handleDifficultySelectSynchronous = (difficulty: string) => {
     socket?.emit('difficultySelected', { roomId: roomId, difficulty });
   };
 
-  const handleDelete = (categoryHumanReadable: string) => {
-    socket?.emit('deleteCategory', categoryHumanReadable);
+  const handleDelete = (category: Category) => {
+    socket?.emit('deleteCategory', category);
+  };
+
+  const processCategoryName = (humanReadableName: string): Category => {
+    const machineName = humanReadableName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-');
+
+    return { humanReadableName, machineName };
   };
 
   return (
     <>
-      <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
-      <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
-      <HackerMode />
+    <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
+    <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
+    <HackerMode />
 
       {gameState === gameStates.start && (
         <>
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Quizmaster</h1>
-        <h2 className="text-2xl font-bold text-gray-800">Synchrone Spiele</h2>
-        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
-                onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen
-        </button>
-        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
-                onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten
-        </button>
-        <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
-                onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
-        </button>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Quizmaster</h1>
+          <h2 className="text-2xl font-bold text-gray-800">Synchrone Spiele</h2>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen
+          </button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten
+          </button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
+          </button>
           <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
           {categories.map((category, index) => (
             <React.Fragment key={index}>
               {!isHackerMode ? (
                 <button
-                  onClick={() => handleAsyncCategorySelect(category.categoryMachineName)}
+                  onClick={() => handleAsyncCategorySelect(category)}
                   className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
                 >
-                  {category.categoryHumanReadable}
+                  {category.humanReadableName}
                 </button>
               ) : (
-                <DeleteButton onDelete={() => handleDelete(category.categoryHumanReadable)} categoryHumanReadable={category.categoryHumanReadable} />
+                <DeleteButton onDelete={() => handleDelete(category)} category={category}/>
               )}
             </React.Fragment>
           ))}
+        </>
+      )}
 
-    </>
-  )
-}
-
-{
-  gameState === gameStates.roomCreation && (
-    <>
-      <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
-      <input
-        className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
-        placeholder="Dein Name"
-        value={playerName}
-        onChange={(e) => setPlayerName(e.target.value)}
-      />
-      <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
+      {gameState === gameStates.roomCreation && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Dein Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+          />
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
         </>
       )}
 
@@ -418,15 +424,17 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         <>
           <h2 className="text-2xl font-bold mb-4">Wähle eine Kategorie</h2>
           <div className="flex flex-wrap justify-center">
-            {categories.map((category, index) => (
-              <button
-                key={index}
-                onClick={() => selectCategory(category.categoryHumanReadable)}
-                className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded"
-              >
-                {category.categoryHumanReadable}
-              </button>
-            ))}
+            {categories.map((category, index) => {
+              return (
+                <button
+                  key={index}
+                  onClick={() => selectCategory(category)}
+                  className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 m-2 rounded"
+                >
+                  {category.humanReadableName}
+                </button>
+              );
+            })}
           </div>
         </>
       )}
@@ -453,7 +461,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
 
       {gameState === gameStates.game && (
         <>
-          <h3>{category} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
+          <h3>{category?.humanReadableName} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
           <h2 className="text-2xl font-bold mb-4">
             Frage {currentQuestionIndex}/{totalQuestions}: {question}
           </h2>
@@ -529,22 +537,25 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       )}
 
       {gameState === gameStates.categoryCreation && (
-        <>
+        <form onSubmit={createCategory}>
           <h2 className="text-2xl font-bold mb-4">Kategorie erstellen</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Kategoriename"
-            value={category}
-            onChange={(e) => setCategory((e.target.value))}
+            value={category?.humanReadableName || ''}
+            onChange={(e) => {
+              const processedCategory = processCategoryName(e.target.value);
+              setCategory(processedCategory);
+            }}
           />
           <button
             className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-            onClick={createCategory}
             disabled={isLoading}
+            type="submit"
           >
             {isLoading ? 'Wird erstellt...' : 'Erstellen'}
           </button>
-        </>
+        </form>
       )}
 
       {gameState === gameStates.roomJoin && (
