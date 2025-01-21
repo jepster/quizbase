@@ -62,6 +62,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   };
 
   useEffect(() => {
+    Modal.setAppElement('body');
     if (socket) {
       socket.on('playerJoined', handlePlayerJoined);
       socket.on('playerReady', handlePlayerReady);
@@ -142,7 +143,6 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     }
     setSuccessMessage(`Kategorie "${data.category.humanReadableName}" erfolgreich erstellt.`);
     setIsSuccessModalOpen(true);
-    Modal.setAppElement('#root');
     setCategory(null);
   }
 
@@ -242,11 +242,10 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const showError = (message: string) => {
     setErrorMessage(message);
     setIsErrorModalOpen(true);
-    Modal.setAppElement('#root');
   };
 
   const createCategory = () => {
-    if (!category || category.humanReadableName.trim() === '') {
+    if (category === null) {
       showError('Bitte gib einen Kategorienamen ein.');
       return;
     }
@@ -337,9 +336,9 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
 
   return (
     <>
-    <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
-    <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
-    <HackerMode />
+      <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
+      <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
+      <HackerMode />
 
       {gameState === gameStates.start && (
         <>
@@ -537,7 +536,10 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       )}
 
       {gameState === gameStates.categoryCreation && (
-        <form onSubmit={createCategory}>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          createCategory();
+        }}>
           <h2 className="text-2xl font-bold mb-4">Kategorie erstellen</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
