@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import Head from 'next/head';
 import LoginForm from '@/app/components/LoginForm';
 import GameInterface from '@/app/components/GameInterface';
@@ -19,6 +19,10 @@ export default function Home() {
   const resetGame = () => {
     setGameState('start');
   };
+
+  const setGameStateCallback = useCallback((newState: string | ((prevState: string) => string)) => {
+    setGameState(newState);
+  }, []);
 
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
@@ -53,7 +57,7 @@ export default function Home() {
           ) : (
             <GameInterface socket={socket}
                            gameState={gameState}
-                           setGameState={setGameState}
+                           setGameState={setGameStateCallback}
                            resetGame={resetGame}
                            setRoomId={setRoomId}
                            roomId={roomId}

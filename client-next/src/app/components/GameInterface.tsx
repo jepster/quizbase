@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import { Socket } from 'socket.io-client';
 import ErrorModal from "@/app/components/modal/ErrorModal";
 import SuccessModal from "@/app/components/modal/SuccessModal";
@@ -45,7 +45,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   const router = useRouter();
   const isHackerMode = useHackerMode();
 
-  const gameStates = {
+  const gameStates = useMemo(() => ({
     start: 'start',
     roomCreation: 'room-creation',
     waitingRoom: 'waiting-room',
@@ -59,7 +59,100 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     categoryCreation: 'category-creation',
     roomJoin: 'room-join',
     roomJoinByLink: 'room-join-by-link',
-  };
+  }), []);
+
+  const handleCategoryDeleted = useCallback((data: { message: string, categories: Category[] }) => {
+    setSuccessMessage(data.message);
+    setIsSuccessModalOpen(true);
+    setCategories(data.categories);
+  }, []);
+
+  const handlePlayerJoined = useCallback((data: { player: string, players: Array<{ name: string; ready: boolean }> }) => {
+    if (playerName !== data.player) {
+      showNotification('Benachrichtigung', `${data.player} ist dem Raum beigetreten.`);
+    }
+    setPlayers(data.players);
+    setGameState(gameStates.waitingRoom);
+  }, [playerName, gameStates, setGameState]);
+
+  const handlePlayerReady = useCallback((data: { players: Array<{ name: string; ready: boolean }> }) => {
+    setPlayers(data.players);
+    const allPlayersReady = data.players.every(player => player.ready);
+    if (allPlayersReady) {
+      setGameState(gameStates.categorySelection);
+    }
+  }, [gameStates, setGameState]);
+
+  const handleSelectCategory = useCallback((data: { playerName: string, categories: Category[] }) => {
+    if (data.playerName === playerName) {
+      setGameState(gameStates.categorySelection);
+    } else {
+      setGameState(gameStates.categorySelectionWaiting);
+    }
+  }, [playerName, gameStates, setGameState]);
+
+  const handleSelectDifficultySynchronous = useCallback((data: { playerName: string, category: Category, difficulty: string }) => {
+    setCategory(data.category);
+    if (data.playerName === playerName) {
+      setGameState(gameStates.selectDifficultySynchronous);
+    } else {
+      setGameState(gameStates.selectDifficultyWaiting);
+    }
+  }, [playerName, gameStates, setGameState]);
+
+  const handleCategoryCreated = useCallback((data: {category: Category}) => {
+    setIsLoading(false);
+    setGameState(gameStates.start);
+    if (socket) {
+      socket.emit('getCategories', (categories: Category[]) => {
+        setCategories(categories);
+      });
+    }
+    setSuccessMessage(`Kategorie "${data.category.humanReadableName}" erfolgreich erstellt.`);
+    setIsSuccessModalOpen(true);
+    setCategory(null);
+  }, [socket, gameStates, setGameState]);
+
+  const handleNewQuestion = useCallback((data: {
+    question: string;
+    options: string[];
+    totalQuestionsCount: number;
+    currentQuestionIndex: number;
+    difficulty: string;
+  }) => {
+    setQuestion(data.question);
+    setOptions(data.options);
+    setCurrentQuestionIndex(currentQuestionIndex + 1);
+    setTotalQuestions(data.totalQuestionsCount);
+    setIsAnswerCorrect(false);
+    setAnswerSubmitted(false);
+    setLastSubmittedAnswer(null);
+    setGameState(gameStates.game);
+  }, [gameStates, setGameState]);
+
+  const handleGameEnded = useCallback((data: {
+    leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }>,
+    results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }>
+  }) => {
+    setLeaderboard(data.leaderboard);
+    setResults(data.results);
+    setGameState(gameStates.results);
+    setCurrentQuestionIndex(0);
+  }, [gameStates, setGameState]);
+
+  const handleNewGameStarted = useCallback((players: Array<{ name: string; ready: boolean }>) => {
+    setPlayers(players);
+    setGameState(gameStates.waitingRoom);
+  }, [gameStates, setGameState]);
+
+  const handleAnswerRevealed = useCallback((data: { options: string[], correctIndex: number, explanation: string, allPlayersAnsweredQuestion: boolean, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
+    setExplanation(data.explanation);
+    if (data.leaderboard[0].lastQuestionCorrect) {
+      setIsAnswerCorrect(true);
+    }
+    setLeaderboard(data.leaderboard);
+    setAllPlayersAnsweredQuestion(data.allPlayersAnsweredQuestion);
+  }, []);
 
   useEffect(() => {
     Modal.setAppElement('body');
@@ -88,96 +181,11 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         socket.off('answerRevealed', handleAnswerRevealed);
         socket.off('gameEnded', handleGameEnded);
         socket.off('newGameStarted', handleNewGameStarted);
-        socket.off('categoryCreated');
+        socket.off('categoryCreated', handleCategoryCreated);
         socket.off('categoryDeleted', handleCategoryDeleted);
       };
     }
-  }, [socket, playerName]);
-
-  const handleCategoryDeleted = (data: { message: string, categories: Category[] }) => {
-    setSuccessMessage(data.message);
-    setIsSuccessModalOpen(true);
-    setCategories(data.categories);
-  };
-
-  const handlePlayerJoined = (data: { player: string, players: Array<{ name: string; ready: boolean }> }) => {
-    if (playerName !== data.player) {
-      showNotification('Benachrichtigung', `${data.player} ist dem Raum beigetreten.`);
-    }
-    setPlayers(data.players);
-    setGameState(gameStates.waitingRoom);
-  };
-
-  const handlePlayerReady = (data: { players: Array<{ name: string; ready: boolean }> }) => {
-    setPlayers(data.players);
-    const allPlayersReady = data.players.every(player => player.ready);
-    if (allPlayersReady) {
-      setGameState(gameStates.categorySelection);
-    }
-  };
-
-  const handleSelectCategory = (data: { playerName: string, categories: Category[] }) => {
-    if (data.playerName === playerName) {
-      setGameState(gameStates.categorySelection);
-    } else {
-      setGameState(gameStates.categorySelectionWaiting);
-    }
-  };
-
-  const handleSelectDifficultySynchronous = (data: { playerName: string, category: Category, difficulty: string }) => {
-    setCategory(data.category);
-    if (data.playerName === playerName) {
-      setGameState(gameStates.selectDifficultySynchronous);
-    } else {
-      setGameState(gameStates.selectDifficultyWaiting);
-    }
-  };
-
-  const handleCategoryCreated = (data: {category: Category}) => {
-    setIsLoading(false);
-    setGameState(gameStates.start);
-    if (socket) {
-      socket.emit('getCategories', (categories: Category[]) => {
-        setCategories(categories);
-      });
-    }
-    setSuccessMessage(`Kategorie "${data.category.humanReadableName}" erfolgreich erstellt.`);
-    setIsSuccessModalOpen(true);
-    setCategory(null);
-  }
-
-  const handleNewQuestion = (data: { question: string; options: string[], totalQuestionsCount: number, difficulty: string}) => {
-    setQuestion(data.question);
-    setOptions(data.options);
-    setGameState(gameStates.game);
-    setLastSubmittedAnswer(null);
-    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-    setTotalQuestions(data.totalQuestionsCount);
-    setDifficulty(data.difficulty);
-    setIsAnswerCorrect(false);
-    setAllPlayersAnsweredQuestion(false);
-  };
-
-  const handleAnswerRevealed = (data: { options: string[], correctIndex: number, explanation: string, allPlayersAnsweredQuestion: boolean, leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }> }) => {
-    setExplanation(data.explanation);
-    if (data.leaderboard[0].lastQuestionCorrect) {
-      setIsAnswerCorrect(true);
-    }
-    setLeaderboard(data.leaderboard);
-    setAllPlayersAnsweredQuestion(data.allPlayersAnsweredQuestion);
-  };
-
-  const handleGameEnded = (data: { leaderboard: Array<{ name: string; score: number; lastQuestionCorrect: boolean }>, results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }> }) => {
-    setLeaderboard(data.leaderboard);
-    setResults(data.results);
-    setGameState(gameStates.results);
-    setCurrentQuestionIndex(0);
-  };
-
-  const handleNewGameStarted = (players: Array<{ name: string; ready: boolean }>) => {
-    setPlayers(players);
-    setGameState(gameStates.waitingRoom);
-  };
+  }, [socket, playerName, handleCategoryCreated, handleGameEnded, handleNewGameStarted, handleNewQuestion, handlePlayerJoined, handlePlayerReady, handleSelectCategory, handleSelectDifficultySynchronous, handleAnswerRevealed, handleCategoryDeleted]);
 
   const showNotification = (title: string, body: string) => {
     if (Notification.permission === "granted") {
@@ -315,6 +323,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   };
 
   const handleDifficultySelectSynchronous = (difficulty: string) => {
+    setDifficulty(difficulty);
     socket?.emit('difficultySelected', { roomId: roomId, difficulty });
   };
 
@@ -372,7 +381,10 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
       )}
 
       {gameState === gameStates.roomCreation && (
-        <>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          createRoom();
+        }}>
           <h2 className="text-2xl font-bold mb-4">Quiz erstellen</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
@@ -380,8 +392,8 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
           />
-          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" onClick={createRoom}>Raum erstellen</button>
-        </>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">Raum erstellen</button>
+        </form>
       )}
 
       {gameState === gameStates.waitingRoom && (
