@@ -1,8 +1,8 @@
 'use client';
 
-import {useParams} from 'next/navigation';
-import {useEffect, useState} from "react";
-import {useSocket} from "@/app/hooks/useSocket";
+import { useParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSocket } from "@/app/hooks/useSocket";
 import ErrorModal from "@/app/components/modal/ErrorModal";
 import LoginForm from "@/app/components/LoginForm";
 import Link from "next/link";
@@ -36,20 +36,63 @@ export default function Page() {
   const [score, setScore] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  const gameStates = useMemo(() => ({
+    start: 'start',
+    game: 'game',
+    results: 'results',
+  }), []);
+
+  const handleNewQuestion = useCallback((data: {
+    question: string;
+    options: string[],
+    totalQuestionsCount: number,
+    currentQuestionIndex: number,
+    difficulty: string
+  }) => {
+    setQuestion(data.question);
+    setOptions(data.options);
+    setCurrentQuestionIndex(data.currentQuestionIndex);
+    setTotalQuestions(data.totalQuestionsCount);
+    setIsAnswerCorrect(false);
+    setAnswerSubmitted(false);
+    setLastSubmittedAnswer(null);
+    setGameState(gameStates.game);
+  }, [gameStates]);
+
+  const handleAnswerResult = useCallback((data: {
+    correctIndex: number,
+    explanation: string,
+    isCorrect: boolean,
+    score: number
+  }) => {
+    setExplanation(data.explanation);
+    setIsAnswerCorrect(data.isCorrect);
+    setAnswerSubmitted(true);
+  }, []);
+
+  const handleGameEnded = useCallback((data: {
+    results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }>,
+    score: number,
+    totalQuestions: number,
+    toplist: Array<{
+      playerName: string,
+      score: number,
+      category: Category,
+      difficulty: string,
+      playDate: Date
+    }>
+  }) => {
+    setGameState(gameStates.results);
+    setScore(data.score);
+    setToplist(data.toplist);
+  }, [gameStates]);
+
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
     if (authToken === 'authenticated') {
       setIsAuthenticated(true);
     }
-  }, []);
 
-  const gameStates = {
-    start: 'start',
-    game: 'game',
-    results: 'results',
-  };
-
-  useEffect(() => {
     if (socket) {
       socket.on('singlePlayerQuiz:question', handleNewQuestion);
       socket.on('singlePlayerQuiz:answerResult', handleAnswerResult);
@@ -71,52 +114,7 @@ export default function Page() {
         socket.off('getCategoryByMachineName');
       };
     }
-  }, [socket, playerName]);
-
-  const handleNewQuestion = (data: {
-    question: string;
-    options: string[],
-    totalQuestionsCount: number,
-    currentQuestionIndex: number,
-    difficulty: string
-  }) => {
-    setQuestion(data.question);
-    setOptions(data.options);
-    setCurrentQuestionIndex(data.currentQuestionIndex);
-    setTotalQuestions(data.totalQuestionsCount);
-    setIsAnswerCorrect(false);
-    setAnswerSubmitted(false);
-    setLastSubmittedAnswer(null);
-    setGameState(gameStates.game);
-  };
-
-  const handleAnswerResult = (data: {
-    correctIndex: number,
-    explanation: string,
-    isCorrect: boolean,
-    score: number
-  }) => {
-    setExplanation(data.explanation);
-    setIsAnswerCorrect(data.isCorrect);
-    setAnswerSubmitted(true);
-  };
-
-  const handleGameEnded = (data: {
-    results: Array<{ question: string, options: string[], correctIndex: number, explanation: string }>,
-    score: number,
-    totalQuestions: number,
-    toplist: Array<{
-      playerName: string,
-      score: number,
-      category: Category,
-      difficulty: string,
-      playDate: Date
-    }>
-  }) => {
-    setGameState(gameStates.results);
-    setScore(data.score);
-    setToplist(data.toplist);
-  };
+  }, [socket, playerName, handleNewQuestion, handleAnswerResult, handleGameEnded, params.category]);
 
   const startGame = () => {
     if (playerName === '') {
@@ -217,7 +215,6 @@ export default function Page() {
                       </button>
                     ))}
                   </div>
-
                   {answerSubmitted && (
                     <>
                       <div

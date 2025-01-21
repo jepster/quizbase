@@ -1,4 +1,4 @@
-import Category from "@/app/components/types/Category";
+import type Category from "@/app/types/Category";
 
 interface DeleteButtonProps {
   onDelete: () => void;
