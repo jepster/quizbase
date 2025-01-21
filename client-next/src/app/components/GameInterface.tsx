@@ -8,7 +8,7 @@ import Modal from 'react-modal';
 import HackerMode from "@/app/components/HackerMode";
 import { useHackerMode } from "@/app/components/HackerMode";
 import DeleteButton from "@/app/components/DeleteButton";
-import Category from "@/app/components/types/category";
+import type Category from "@/app/types/Category";
 
 interface GameInterfaceProps {
   socket: Socket | null;

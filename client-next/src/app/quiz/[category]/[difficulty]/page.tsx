@@ -6,16 +6,13 @@ import {useSocket} from "@/app/hooks/useSocket";
 import ErrorModal from "@/app/components/modal/ErrorModal";
 import LoginForm from "@/app/components/LoginForm";
 import Link from "next/link";
+import type Category from "@/app/types/Category";
 
-// @TODO http://172.17.30.97:9000/quiz/geschichte-im-mittelalter/low
-
-
-export default function AnsynchronousQuiz() {
+export default function Page() {
   const params = useParams();
-  const category = params.category;
+  const [category, setCategory] = useState<Category | null>(null);
   const difficulty = params.difficulty;
   const socket = useSocket();
-
   const [gameState, setGameState] = useState<string>('start');
   const [playerName, setPlayerName] = useState<string>('');
   const [question, setQuestion] = useState<string>('');
@@ -28,7 +25,7 @@ export default function AnsynchronousQuiz() {
   const [toplist, setToplist] = useState<Array<{
     playerName: string,
     score: number,
-    category: string,
+    category: Category,
     difficulty: string,
     playDate: Date
   }>>([]);
@@ -58,10 +55,20 @@ export default function AnsynchronousQuiz() {
       socket.on('singlePlayerQuiz:answerResult', handleAnswerResult);
       socket.on('singlePlayerQuiz:gameEnded', handleGameEnded);
 
+      const categoryMachineName = params.category;
+      socket.emit('getCategoryByMachineName', categoryMachineName, (category: Category | null) => {
+        if (category) {
+          setCategory(category);
+        } else {
+          console.error('Category not found');
+        }
+      });
+
       return () => {
         socket.off('singlePlayerQuiz:question', handleNewQuestion);
         socket.off('singlePlayerQuiz:answerResult', handleAnswerResult);
         socket.off('singlePlayerQuiz:gameEnded', handleGameEnded);
+        socket.off('getCategoryByMachineName');
       };
     }
   }, [socket, playerName]);
@@ -101,7 +108,7 @@ export default function AnsynchronousQuiz() {
     toplist: Array<{
       playerName: string,
       score: number,
-      category: string,
+      category: Category,
       difficulty: string,
       playDate: Date
     }>
@@ -173,7 +180,10 @@ export default function AnsynchronousQuiz() {
               <ErrorModal isOpen={isModalOpen} closeModal={() => setIsModalOpen(false)} errorMessage={errorMessage}/>
 
               {gameState === gameStates.start && (
-                <>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  startGame();
+                }}>
                   <h2 className="text-2xl font-bold mb-4">Spiel starten</h2>
                   <input
                     className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
@@ -183,16 +193,15 @@ export default function AnsynchronousQuiz() {
                   />
                   <button
                     className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={startGame}
                   >
                     Spiel starten
                   </button>
-                </>
+                </form>
               )}
 
               {gameState === gameStates.game && (
                 <>
-                  <h3>{category} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
+                  <h3>{category?.humanReadableName} ({difficulty === 'low' ? 'leicht' : 'schwer'})</h3>
                   <h2 className="text-2xl font-bold mb-4">
                     Frage {currentQuestionIndex}/{totalQuestions}: {question}
                   </h2>

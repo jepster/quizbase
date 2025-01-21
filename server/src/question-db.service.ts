@@ -93,6 +93,28 @@ export class QuestionDbService {
     }
   }
 
+  public async getCategoryByMachineName(
+    machineName: string,
+  ): Promise<Category | null> {
+    try {
+      const collection = await this.getMongoDbCollection();
+      const category = await collection.findOne({
+        categoryMachineName: machineName,
+      });
+
+      if (category) {
+        return {
+          machineName: category.categoryMachineName,
+          humanReadableName: category.categoryHumanReadable,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching category by machine name:', error);
+      return null;
+    }
+  }
+
   private removeDuplicates(questions: Question[]): Question[] {
     const seen = new Set();
     return questions.filter((q) => {

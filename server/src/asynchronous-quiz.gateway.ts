@@ -85,6 +85,7 @@ export class AsynchronousQuizGateway
       answered: false,
       lastQuestionCorrect: false,
     };
+
     const questions =
       await this.questionDbService.getQuestionsByCategoryMachineName(
         payload.category.machineName,
@@ -158,6 +159,14 @@ export class AsynchronousQuizGateway
       });
     }
     return result;
+  }
+
+  @SubscribeMessage('getCategoryByMachineName')
+  async handleGetCategoryByMachineName(
+    client: Socket,
+    machineName: string,
+  ): Promise<Category | null> {
+    return await this.questionDbService.getCategoryByMachineName(machineName);
   }
 
   private askNextQuestion(client: Socket, quizId: string): void {
