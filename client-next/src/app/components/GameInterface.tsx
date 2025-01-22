@@ -496,12 +496,26 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
           {(lastSubmittedAnswer !== null && allPlayersAnsweredQuestion) && (
             <>
               {!isAnswerCorrect && (
-                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort falsch.</div>
+                <div className="text-xl font-bold mb-2 bg-red-500 text-white p-4 rounded-lg">Leider war die Antwort
+                  falsch.</div>
               )}
               <div id="explanation" className="text-xl font-bold mb-2 bg-green-500 text-white p-4 rounded-lg">Korrekte
                 Antwort: {explanation}</div>
             </>
           )}
+          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r mt-5">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p>
+                <strong>Hinweis:</strong> Die Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht
+                garantiert werden.
+              </p>
+            </div>
+          </div>
           {leaderboard.length !== 0 && (
             <>
               <div className="mt-8">

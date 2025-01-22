@@ -49,9 +49,10 @@ export class PerplexityService {
         {
           role: 'user',
           content:
-            'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Die Fragen müssen sich stark unterscheiden und dürfen sich nicht ähneln. ' +
+            'Generiere 10 trivia Fragen mit immer 3 Antwortoptionen im JSON Format. Die Fragen müssen sich stark unterscheiden und dürfen sich nicht ähneln. ' +
             'Es muss 3 Antwortoptionen geben. Keine "Ja" oder "Nein" Antworten. Damit muss der Index der Antwortoptionen bei 0 beginnen und ' +
-            'bei 2 enden. Die richtige Antwort muss eindeutig sein. Die richtige Antwort darf keine Überschneidung mit den anderen Antwortmöglichkeiten haben.' +
+            'bei 2 enden. Die richtige Antwort muss eindeutig sein. Die richtige Antwort darf keine Überschneidung mit den anderen Antwortmöglichkeiten haben. ' +
+            'Überprüfe ob der Index der richtigen Antwortoption eindeutig und klar zur Frage passt. Erstelle erst dann die jeweilige Frage.' +
             'Die Erklärung muss aus zwei bis drei knappen Sätzen bestehen. Die Kategorie ist ' +
             categoryHumanReadable +
             ' und der Schwierigkeitsgrad: ' +
