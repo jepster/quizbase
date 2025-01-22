@@ -14,16 +14,13 @@ export default function Page() {
   const difficulty = params.difficulty;
   const socket = useSocket();
   const [gameState, setGameState] = useState<string>('start');
-  const [playerName, setPlayerName] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('playerName') || '';
-    }
-    return '';
-  });
   const updatePlayerName = (name: string) => {
     setPlayerName(name);
     localStorage.setItem('playerName', name);
   };
+  const [playerName, setPlayerName] = useState<string>(() => {
+    return localStorage.getItem('playerName') || '';
+  });
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -44,7 +41,7 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [inputName, setInputName] = useState<string>('');
+  const [inputName, setInputName] = useState<string>(playerName);
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
 
   const gameStates = useMemo(() => ({
@@ -139,9 +136,7 @@ export default function Page() {
       return;
     }
     if (socket) {
-      const name = playerName || inputName;
-      updatePlayerName(name);
-      socket.emit('singlePlayerQuiz:create', {category, playerName: name, difficulty}, (singlePlayerQuiz: { id: string }) => {
+      socket.emit('singlePlayerQuiz:create', {category, playerName: playerName, difficulty}, (singlePlayerQuiz: { id: string }) => {
         setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }
@@ -206,7 +201,7 @@ export default function Page() {
                   <input
                     className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
                     placeholder="Dein Name"
-                    value={playerName}
+                    value={inputName}
                     onChange={(e) => setInputName(e.target.value)}
                   />
                   <button
