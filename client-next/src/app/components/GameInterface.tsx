@@ -362,21 +362,27 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
                   onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
           </button>
-          <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
-          {categories.map((category, index) => (
-            <React.Fragment key={index}>
-              {!isHackerMode ? (
-                <button
-                  onClick={() => handleAsyncCategorySelect(category)}
-                  className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
-                >
-                  {category.humanReadableName}
-                </button>
-              ) : (
-                <DeleteButton onDelete={() => handleDelete(category)} category={category}/>
-              )}
-            </React.Fragment>
-          ))}
+          {
+            categories.length > 0 && (
+              <>
+                <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
+                {categories.map((category, index) => (
+                  <React.Fragment key={index}>
+                    {!isHackerMode ? (
+                      <button
+                        onClick={() => handleAsyncCategorySelect(category)}
+                        className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                      >
+                        {category.humanReadableName}
+                      </button>
+                    ) : (
+                      <DeleteButton onDelete={() => handleDelete(category)} category={category}/>
+                    )}
+                  </React.Fragment>
+                ))}
+              </>
+            )
+          }
         </>
       )}
 
