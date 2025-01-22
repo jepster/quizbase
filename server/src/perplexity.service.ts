@@ -24,11 +24,7 @@ export class PerplexityService {
       const difficulties = ['high', 'low'];
       await Promise.all(
         difficulties.map(async (difficulty) => {
-          await Promise.all(
-            Array(10)
-              .fill(null)
-              .map(() => this.createQuestionIteration(category, difficulty)),
-          );
+          await this.createQuestionIteration(category, difficulty);
         }),
       );
     })(category);
@@ -49,7 +45,9 @@ export class PerplexityService {
         {
           role: 'user',
           content:
-            'Generiere 10 trivia Fragen mit 3 Optionen im JSON Format. Da es 3 Antwortoptionen gibt, muss der Index bei 0 beginnen und bei 2 enden. Die Erklärung muss aus zwei bis drei knappen Sätzen bestehen. Die Kategorie ist ' +
+            'Generiere 20 trivia Fragen mit 3 Optionen im JSON Format. Die Fragen müssen sich unterscheiden und dürfen sich nicht ähneln. ' +
+            'Es muss 3 Antwortoptionen geben. Keine "Ja" oder "Nein" Antworten. Damit muss der Index der Antwortoptionen bei 0 beginnen und ' +
+            'bei 2 enden. Die Erklärung muss aus zwei bis drei knappen Sätzen bestehen. Die Kategorie ist ' +
             categoryHumanReadable +
             ' und der Schwierigkeitsgrad: ' +
             difficulty +
