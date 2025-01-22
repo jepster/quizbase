@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useSocket } from "@/app/hooks/useSocket";
 import ErrorModal from "@/app/components/modal/ErrorModal";
 import LoginForm from "@/app/components/LoginForm";
@@ -45,6 +45,7 @@ export default function Page() {
   const [score, setScore] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [inputName, setInputName] = useState<string>('');
+  const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
 
   const gameStates = useMemo(() => ({
     start: 'start',
@@ -95,6 +96,7 @@ export default function Page() {
     setGameState(gameStates.results);
     setScore(data.score);
     setToplist(data.toplist);
+    setResults(data.results);
   }, [gameStates]);
 
   useEffect(() => {
@@ -278,7 +280,24 @@ export default function Page() {
                     ))}
                   </ul>
                   <button
-                    className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
+                    className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4 mb-5"
+                    onClick={() => resetGame()}
+                  >
+                    Neues Spiel starten
+                  </button>
+                  <div className="mb-8">
+                    <h3 className="text-xl font-bold mb-2">Fragen und Antworten</h3>
+                    {results.map((result, index) => (
+                      <div key={index}
+                           className={`${index % 2 === 0 ? 'bg-green-100' : 'bg-red-100'} p-4 mt-2 rounded-lg`}>
+                        <h4 className="font-bold mb-2">{result.question}</h4>
+                        <p className="font-semibold">Richtige Antwort: {result.options[result.correctIndex]}</p>
+                        <p className="mt-2">Erklärung: {result.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
                     onClick={() => resetGame()}
                   >
                     Neues Spiel starten
