@@ -14,7 +14,16 @@ export default function Page() {
   const difficulty = params.difficulty;
   const socket = useSocket();
   const [gameState, setGameState] = useState<string>('start');
-  const [playerName, setPlayerName] = useState<string>('');
+  const [playerName, setPlayerName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('playerName') || '';
+    }
+    return '';
+  });
+  const updatePlayerName = (name: string) => {
+    setPlayerName(name);
+    localStorage.setItem('playerName', name);
+  };
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -35,6 +44,7 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [inputName, setInputName] = useState<string>('');
 
   const gameStates = useMemo(() => ({
     start: 'start',
@@ -88,6 +98,11 @@ export default function Page() {
   }, [gameStates]);
 
   useEffect(() => {
+    const storedPlayerName = localStorage.getItem('playerName');
+    if (storedPlayerName) {
+      setPlayerName(storedPlayerName);
+    }
+
     const authToken = localStorage.getItem('authToken');
     if (authToken === 'authenticated') {
       setIsAuthenticated(true);
@@ -117,12 +132,14 @@ export default function Page() {
   }, [socket, playerName, handleNewQuestion, handleAnswerResult, handleGameEnded, params.category]);
 
   const startGame = () => {
-    if (playerName === '') {
+    if (playerName === '' && inputName === '') {
       showError('Es muss ein Name eingegeben werden.');
       return;
     }
     if (socket) {
-      socket.emit('singlePlayerQuiz:create', {category, playerName, difficulty}, (singlePlayerQuiz: { id: string }) => {
+      const name = playerName || inputName;
+      updatePlayerName(name);
+      socket.emit('singlePlayerQuiz:create', {category, playerName: name, difficulty}, (singlePlayerQuiz: { id: string }) => {
         setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }
@@ -153,7 +170,7 @@ export default function Page() {
   }
 
   const resetGame = () => {
-    setGameState('start');
+    setGameState(gameStates.start);
   };
 
   return (
@@ -180,6 +197,7 @@ export default function Page() {
               {gameState === gameStates.start && (
                 <form onSubmit={(e) => {
                   e.preventDefault();
+                  updatePlayerName(inputName);
                   startGame();
                 }}>
                   <h2 className="text-2xl font-bold mb-4">Spiel starten</h2>
@@ -187,10 +205,11 @@ export default function Page() {
                     className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
                     placeholder="Dein Name"
                     value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
+                    onChange={(e) => setInputName(e.target.value)}
                   />
                   <button
                     className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+                    type="submit"
                   >
                     Spiel starten
                   </button>
@@ -215,6 +234,19 @@ export default function Page() {
                       </button>
                     ))}
                   </div>
+                  <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r mt-5">
+                    <div className="flex items-center">
+                      <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                           xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <p>
+                        <strong>Hinweis:</strong> Die Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht garantiert werden.
+                      </p>
+                    </div>
+                  </div>
+
                   {answerSubmitted && (
                     <>
                       <div
@@ -247,7 +279,7 @@ export default function Page() {
                   </ul>
                   <button
                     className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4"
-                    onClick={() => setGameState(gameStates.start)}
+                    onClick={() => resetGame()}
                   >
                     Neues Spiel starten
                   </button>
