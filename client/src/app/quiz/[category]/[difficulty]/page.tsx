@@ -7,6 +7,9 @@ import ErrorModal from "@/app/components/modal/ErrorModal";
 import LoginForm from "@/app/components/LoginForm";
 import Link from "next/link";
 import type Category from "@/app/types/Category";
+import { useSelector, useDispatch } from 'react-redux';
+import { setPlayerName } from "@/app/store/slices/userSlice";
+import {RootState} from "@/app/store";
 
 export default function Page() {
   const params = useParams();
@@ -14,13 +17,13 @@ export default function Page() {
   const difficulty = params.difficulty;
   const socket = useSocket();
   const [gameState, setGameState] = useState<string>('start');
-  const updatePlayerName = (name: string) => {
-    setPlayerName(name);
-    localStorage.setItem('playerName', name);
-  };
-  const [playerName, setPlayerName] = useState<string>(() => {
-    return localStorage.getItem('playerName') || '';
-  });
+  // const updatePlayerName = (name: string) => {
+  //   setPlayerName(name);
+  //   localStorage.setItem('playerName', name);
+  // };
+  // const [playerName, setPlayerName] = useState<string>(() => {
+  //   return localStorage.getItem('playerName') || '';
+  // });
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -41,7 +44,6 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [inputName, setInputName] = useState<string>(playerName);
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
 
   const gameStates = useMemo(() => ({
@@ -96,11 +98,19 @@ export default function Page() {
     setResults(data.results);
   }, [gameStates]);
 
+  const dispatch = useDispatch();
+  const playerName = useSelector((state: RootState) => state.user.playerName);
+  const [inputName, setInputName] = useState<string>(playerName);
+
+  const updatePlayerName = (name: string) => {
+    dispatch(setPlayerName(name));
+  };
+
   useEffect(() => {
-    const storedPlayerName = localStorage.getItem('playerName');
-    if (storedPlayerName) {
-      setPlayerName(storedPlayerName);
-    }
+    // const storedPlayerName = localStorage.getItem('playerName');
+    // if (storedPlayerName) {
+    //   setPlayerName(storedPlayerName);
+    // }
 
     const authToken = localStorage.getItem('authToken');
     if (authToken === 'authenticated') {
@@ -136,7 +146,9 @@ export default function Page() {
       return;
     }
     if (socket) {
-      socket.emit('singlePlayerQuiz:create', {category, playerName: playerName, difficulty}, (singlePlayerQuiz: { id: string }) => {
+      const name = playerName || inputName;
+      updatePlayerName(name);
+      socket.emit('singlePlayerQuiz:create', {category, playerName: name, difficulty}, (singlePlayerQuiz: { id: string }) => {
         setSinglePlayerQuizId(singlePlayerQuiz.id);
       });
     }

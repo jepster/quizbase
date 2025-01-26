@@ -18,7 +18,7 @@ services:
 
   frontend:
     build:
-      context: ./client-next
+      context: ./client
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
