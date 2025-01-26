@@ -1,17 +1,15 @@
-import {useState} from 'react';
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setAuthToken } from "@/app/store/slices/userSlice";
 
-interface LoginFormProps {
-  setIsAuthenticated: (value: boolean) => void;
-}
-
-export default function LoginForm({setIsAuthenticated}: LoginFormProps) {
+export default function LoginForm() {
   const [codeword, setCodeword] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const dispatch = useDispatch();
 
   const handleLogin = () => {
     if (codeword === 'sandra') {
-      localStorage.setItem('authToken', 'authenticated');
-      setIsAuthenticated(true);
+      dispatch(setAuthToken('authenticated'));
     } else {
       setError('Falsches Codewort.');
       setTimeout(() => setError(''), 3000);
@@ -22,6 +20,7 @@ export default function LoginForm({setIsAuthenticated}: LoginFormProps) {
     <>
       <h2 className="text-2xl font-bold mb-4">Login</h2>
       <input
+        type="password"
         className="w-full p-2 mt-2 mb-2 border-2 border-blue-500 rounded"
         placeholder="Codewort"
         value={codeword}
