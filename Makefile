@@ -1,7 +1,7 @@
 deploy:
-	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=cypress-tests --exclude=client-next/.env.local --exclude=client-next/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
+	rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=cypress-tests --exclude=client/.env.local --exclude=client/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
 	ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
-	ssh root@104.248.132.247 "cd app && cp client-next/.env.production client-next/.env"
+	ssh root@104.248.132.247 "cd app && cp client/.env.production client/.env"
 	ssh -t root@104.248.132.247 "cd app && docker-compose down"
 	ssh -t root@104.248.132.247 "cd app && docker-compose build frontend"
 	ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
@@ -21,7 +21,7 @@ ssh:
 	ssh root@104.248.132.247
 
 start-client-dev:
-	cd client-next && npm run dev
+	cd client && npm run dev
 
 start-server-dev:
 	cd server && npm run start:debug
@@ -60,7 +60,7 @@ mongodb-restore:
 	docker exec -it ${PROJECT_NAME}_mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase
 
 dev:
-	concurrently "cd client-next && npm run dev" "cd server && npm run --inspect-brk start:debug" "docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d" "make open-chrome-with-wsl-ip"
+	concurrently "cd client && npm run dev" "cd server && npm run --inspect-brk start:debug" "docker compose -p $(PROJECT_NAME) -f ./docker-compose.dev.yml up -d" "make open-chrome-with-wsl-ip"
 
 cypress-open-ui:
 	cd cypress-tests && npx cypress open

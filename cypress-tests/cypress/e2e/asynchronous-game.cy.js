@@ -1,12 +1,14 @@
 describe('Synchronous single player game', () => {
   it('Join by link', () => {
-    cy.visit('http://172.17.30.97:9000/quiz/geschichte-im-mittelalter/low')
+    cy.visit('http://172.17.30.97:9000')
     cy.contains('Login')
         .parent()
         .find('button')
     cy.get('input')
         .type('sandra');
     cy.get('button').click()
+
+    cy.visit('http://172.17.30.97:9000/quiz/geschichte-im-mittelalter/low');
 
     cy.contains('a', 'Zur Startseite').should('exist')
     cy.get('input')
