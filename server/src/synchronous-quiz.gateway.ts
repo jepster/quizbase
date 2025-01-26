@@ -310,6 +310,7 @@ export class SynchronousQuizGateway
         category: room.selectedCategory,
         difficulty: room.difficulty,
         totalQuestionsCount: room.questions.length,
+        currentQuestionIndex: room.currentQuestionIndex + 1,
       });
     } else {
       this.endGame(room);

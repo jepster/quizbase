@@ -122,7 +122,7 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
   }) => {
     setQuestion(data.question);
     setOptions(data.options);
-    setCurrentQuestionIndex(currentQuestionIndex + 1);
+    setCurrentQuestionIndex(data.currentQuestionIndex);
     setTotalQuestions(data.totalQuestionsCount);
     setIsAnswerCorrect(false);
     setAnswerSubmitted(false);
