@@ -39,27 +39,32 @@ export default function App() {
   return (
     <Provider store={store}>
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        {/* Hero Section */}
-        <div
-          className="relative h-[500px] bg-cover bg-center"
-          style={{
-            backgroundImage: 'url("https://images.unsplash.com/photo-1483004406427-6acb078d1f2d?auto=format&fit=crop&q=80&w=2000")',
-          }}
-        >
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative max-w-7xl mx-auto px-4 h-full flex items-center">
-            <div className="text-white max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Teste dein Angelwissen</h1>
-              <p className="text-xl md:text-2xl mb-8">
-                Fordere dich selbst heraus und erweitere dein Wissen rund ums Angeln mit unseren spannenden Quizzes
-              </p>
+        {gameState === 'start' && (
+          <div
+            className="relative h-[400px] bg-cover bg-center"
+            style={{
+              backgroundImage: 'url("https://images.unsplash.com/photo-1483004406427-6acb078d1f2d?auto=format&fit=crop&q=80&w=2000")',
+            }}
+          >
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative max-w-7xl mx-auto px-4 h-full flex items-center">
+              <div className="text-white max-w-2xl">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6">Teste dein Angelwissen</h1>
+                <p className="text-xl md:text-2xl mb-8">
+                  Fordere dich selbst heraus und erweitere dein Wissen rund ums Angeln mit unseren spannenden Quizzes
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Categories Section */}
         <div className="max-w-7xl mx-auto px-4 py-16 flex-grow">
-          <h2 className="text-3xl font-bold text-center">Quiz-Kategorien</h2>
+          {gameState === 'start' && (
+            <>
+              <h2 className="text-3xl font-bold text-center">Quiz-Kategorien</h2>
+            </>
+          )}
 
           <div className="flex justify-center">
             <div className="flex-col w-full max-w-4xl px-4 sm:px-6 lg:px-8">
