@@ -7,6 +7,7 @@ import DifficultySelector from "@/app/components/DifficultySelector";
 import Modal from 'react-modal';
 import HackerMode from "@/app/components/HackerMode";
 import { useHackerMode } from "@/app/components/HackerMode";
+import DeleteButton from "@/app/components/DeleteButton";
 import type Category from "@/app/types/Category";
 
 interface GameInterfaceProps {
@@ -18,7 +19,7 @@ interface GameInterfaceProps {
   resetGame: () => void;
 }
 
-export default function GameInterface({ socket, gameState, setGameState, setRoomId, roomId }: GameInterfaceProps) {
+export default function DevGameInterface({ socket, gameState, setGameState, setRoomId, roomId }: GameInterfaceProps) {
   const [playerName, setPlayerName] = useState<string>('');
   const [players, setPlayers] = useState<Array<{ name: string; ready: boolean }>>([]);
   const [question, setQuestion] = useState<string>('');
@@ -326,6 +327,10 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
     socket?.emit('difficultySelected', { roomId: roomId, difficulty });
   };
 
+  const handleDelete = (category: Category) => {
+    socket?.emit('deleteCategory', category);
+  };
+
   const processCategoryName = (humanReadableName: string): Category => {
     const machineName = humanReadableName
       .toLowerCase()
@@ -346,17 +351,33 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
 
       {gameState === gameStates.start && (
         <>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Quizmaster</h1>
+          <h2 className="text-2xl font-bold text-gray-800">Synchrone Spiele</h2>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.roomCreation)}>Quiz erstellen
+          </button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.roomJoin)}>Quiz beitreten
+          </button>
+          <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
+                  onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
+          </button>
           {
             categories.length > 0 && (
               <>
+                <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
                 {categories.map((category, index) => (
                   <React.Fragment key={index}>
-                    <button
-                      onClick={() => handleAsyncCategorySelect(category)}
-                      className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded m-2"
-                    >
-                      {category.humanReadableName}
-                    </button>
+                    {!isHackerMode ? (
+                      <button
+                        onClick={() => handleAsyncCategorySelect(category)}
+                        className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                      >
+                        {category.humanReadableName}
+                      </button>
+                    ) : (
+                      <DeleteButton onDelete={() => handleDelete(category)} category={category}/>
+                    )}
                   </React.Fragment>
                 ))}
               </>
@@ -546,6 +567,31 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
         </>
       )}
 
+      {gameState === gameStates.categoryCreation && (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          createCategory();
+        }}>
+          <h2 className="text-2xl font-bold mb-4">Kategorie erstellen</h2>
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Kategoriename"
+            value={category?.humanReadableName || ''}
+            onChange={(e) => {
+              const processedCategory = processCategoryName(e.target.value);
+              setCategory(processedCategory);
+            }}
+          />
+          <button
+            className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+            disabled={isLoading}
+            type="submit"
+          >
+            {isLoading ? 'Wird erstellt...' : 'Erstellen'}
+          </button>
+        </form>
+      )}
+
       {gameState === gameStates.roomJoin && (
         <>
           <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
@@ -555,6 +601,24 @@ export default function GameInterface({ socket, gameState, setGameState, setRoom
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
           />
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Dein Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+          />
+          <button
+            className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded"
+            onClick={joinRoom}
+          >
+            Party beitreten
+          </button>
+        </>
+      )}
+
+      {gameState === gameStates.roomJoinByLink && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">Raum beitreten</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Dein Name"

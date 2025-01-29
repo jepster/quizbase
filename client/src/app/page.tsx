@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import Head from 'next/head';
 import LoginForm from '@/app/components/LoginForm';
-import GameInterface from '@/app/components/GameInterface';
+import DevGameInterface from '@/app/components/DevGameInterface';
 import { useSocket } from '@/app/hooks/useSocket';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -53,7 +53,7 @@ export default function Home() {
             {!isAuthenticated ? (
               <LoginForm />
             ) : (
-              <GameInterface
+              <DevGameInterface
                 socket={socket}
                 gameState={gameState}
                 setGameState={setGameStateCallback}
