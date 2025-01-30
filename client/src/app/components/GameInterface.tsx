@@ -67,27 +67,9 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
     playerNameInput: 'player-name-input',
   }), []);
 
-  const handleCategoryDeleted = useCallback((data: { message: string, categories: Category[] }) => {
-    setSuccessMessage(data.message);
-    setIsSuccessModalOpen(true);
-    setCategories(data.categories);
-  }, []);
-
   const dispatch = useDispatch();
   const playerName = useSelector((state: RootState) => state.user.playerName);
   const [inputName, setInputName] = useState<string>(playerName);
-
-  const handleSelectCategory = useCallback((data: { playerName: string, categories: Category[] }) => {
-    if (data.playerName === playerName) {
-      setGameState(gameStates.categorySelection);
-    } else {
-      setGameState(gameStates.categorySelectionWaiting);
-    }
-  }, [playerName, gameStates, setGameState]);
-
-  const handleSelectDifficultySynchronous = useCallback((data: { playerName: string, category: Category, difficulty: string }) => {
-    setCategory(data.category);
-  }, [playerName, gameStates, setGameState]);
 
   const handleNewQuestion = useCallback((data: {
     question: string;
@@ -269,7 +251,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
           updatePlayerName(inputName);
           startGame();
         }}>
-          <h2 className="text-2xl font-bold mb-4">Spiel starten</h2>
+          <h2 className="text-2xl font-bold mb-4">Wie ist dein Spielername?</h2>
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Dein Name"
