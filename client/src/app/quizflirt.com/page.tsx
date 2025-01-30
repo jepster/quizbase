@@ -99,13 +99,8 @@ export default function Page() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-              <img
-                src="https://images.unsplash.com/photo-1516500896640-4a7c7ea186d7?auto=format&fit=crop&w=800&q=80"
-                alt="Glückliches Paar beim Quiz"
-                className="w-full h-48 object-cover rounded-lg mb-6"
-              />
               <blockquote className="text-xl text-gray-600 italic mb-4">
-                "Durch die Quiz haben wir uns auf eine ganz besondere Art kennengelernt. Es war entspannt, lustig und hat uns sofort Gesprächsthemen gegeben. Jetzt sind wir seit 6 Monaten zusammen!"
+                Durch die Quiz haben wir uns auf eine ganz besondere Art kennengelernt. Es war entspannt, lustig und hat uns sofort Gesprächsthemen gegeben. Jetzt sind wir seit 6 Monaten zusammen!
               </blockquote>
               <p className="font-semibold">Marie & Thomas</p>
               <p className="text-gray-500">Haben sich über Quiz-Dating gefunden</p>

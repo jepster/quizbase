@@ -2,16 +2,12 @@ import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import { Socket } from 'socket.io-client';
 import ErrorModal from "@/app/components/modal/ErrorModal";
 import SuccessModal from "@/app/components/modal/SuccessModal";
-import { useRouter } from 'next/navigation';
 import DifficultySelector from "@/app/components/DifficultySelector";
-import Modal from 'react-modal';
 import HackerMode from "@/app/components/HackerMode";
-import { useHackerMode } from "@/app/components/HackerMode";
 import type Category from "@/app/types/Category";
 import { setPlayerName } from "@/app/store/slices/userSlice";
-import {Provider, useDispatch, useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from "@/app/store";
-import {useSocket} from "@/app/hooks/useSocket";
 
 interface GameInterfaceProps {
   socket: Socket | null;
@@ -31,9 +27,9 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [successMessage] = useState<string>('');
   const [results, setResults] = useState<Array<{ question: string, options: string[], correctIndex: number, explanation: string }>>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading] = useState<boolean>(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
   const [answerSubmitted, setAnswerSubmitted] = useState<boolean>(false);

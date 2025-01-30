@@ -4,8 +4,7 @@ PROJECT_NAME := "quizbase"
   just --list
 
 deploy:
-    rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=cypress-tests --exclude=client/.env.local --exclude=client/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
-    ssh root@104.248.132.247 "cd app && cp server/.env.dist server/.env"
+    just rsync
     ssh root@104.248.132.247 "cd app && cp client/.env.production client/.env"
     ssh -t root@104.248.132.247 "cd app && docker-compose down"
     ssh -t root@104.248.132.247 "cd app && docker-compose build frontend"
@@ -22,8 +21,11 @@ deploy-with-dependencies:
     ssh -t root@104.248.132.247 "cd app && docker-compose build frontend"
     ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
 
+rsync:
+    rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=cypress-tests --exclude=client/.env.local --exclude=client/node_modules/ --exclude=client/node_modules/ --exclude=server/node_modules/ root@104.248.132.247:/root/app
+
 ssh:
-    ssh root@104.248.132.247
+    ssh -t root@104.248.132.247 'cd /root/app && bash -l'
 
 start-client-dev:
     cd client && npm run dev
@@ -69,3 +71,7 @@ cypress-test-asynchronous-game:
 
 test-integration:
     cd server && npm run test:integration
+
+# Creating an optimized production build. Precheck before deploy.
+client-build:
+    cd client && npm run build

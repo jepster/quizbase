@@ -1,13 +1,10 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Fish, Brain, Map, Leaf, Ruler, Trophy, ChevronRight } from 'lucide-react';
 import { useSocket } from '@/app/hooks/useSocket';
 import Link from 'next/link';
 import { Provider } from 'react-redux';
 import { store } from '@/app/store';
-import { useSelector } from 'react-redux';
-import { RootState } from "@/app/store";
 import GameInterface from '@/app/components/GameInterface';
 
 export default function App() {

@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name mobilefish.de;
+    server_name fishingquiz.de;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
