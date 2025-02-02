@@ -16,6 +16,9 @@ const userSlice = createSlice({
   reducers: {
     setPlayerName: (state, action: PayloadAction<string>) => {
       state.playerName = action.payload;
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('playerName', JSON.stringify(action.payload));
+      }
     },
     setAuthToken: (state, action: PayloadAction<string>) => {
       state.authToken = action.payload;
