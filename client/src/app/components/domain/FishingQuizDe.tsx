@@ -7,7 +7,7 @@ import { Provider } from 'react-redux';
 import { store } from '@/app/store';
 import GameInterface from '@/app/components/GameInterface';
 
-export default function App() {
+export default function FishingQuizDe() {
   const socket = useSocket();
   const [gameState, setGameState] = useState<string>('start');
   const [roomId, setRoomId] = useState<string>('');
