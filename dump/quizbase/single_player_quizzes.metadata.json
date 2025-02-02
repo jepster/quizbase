@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"68638fddea1e4a93b0174788a6129519","collectionName":"single_player_quizzes","type":"collection"}
