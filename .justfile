@@ -6,6 +6,7 @@ PROJECT_NAME := "quizbase"
 deploy:
     just rsync
     ssh root@104.248.132.247 "cd app && cp client/.env.production client/.env"
+    ssh root@104.248.132.247 -o StrictHostKeyChecking=no "cd app && cp server/.env.dist server/.env"
     ssh -t root@104.248.132.247 "cd app && docker-compose down"
     ssh -t root@104.248.132.247 "cd app && docker-compose build frontend"
     ssh -t root@104.248.132.247 "cd app && docker-compose up -d"

@@ -17,7 +17,10 @@ export default function LoginForm() {
   };
 
   return (
-    <>
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      handleLogin();
+    }}>
       <h2 className="text-2xl font-bold mb-4">Login</h2>
       <input
         type="password"
@@ -29,10 +32,11 @@ export default function LoginForm() {
       <button
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         onClick={handleLogin}
+        type="submit"
       >
         Login
       </button>
       {error && <p className="text-red-500 mt-2">{error}</p>}
-    </>
+    </form>
   );
 }

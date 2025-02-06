@@ -2,7 +2,7 @@ services:
 
   mongodb:
     image: mongo:latest
-    container_name: ${PROJECT_NAME}_mongodb
+    container_name: quizbase_mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
