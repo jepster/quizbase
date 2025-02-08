@@ -36,6 +36,9 @@ services:
       - NODE_ENV=production
     networks:
       - application
+      - internal
+    depends_on:
+      - mongodb
 
   certbot:
     image: certbot/certbot
@@ -54,7 +57,7 @@ services:
       - mongodb_data:/data/db
       - ./dump:/data/db/dump
     networks:
-      - application
+      - internal
 
 volumes:
   certbot-conf:
@@ -64,3 +67,6 @@ volumes:
 networks:
   application:
     driver: bridge
+  internal:
+    driver: bridge
+    internal: true
