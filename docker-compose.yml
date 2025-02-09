@@ -24,6 +24,7 @@ services:
       - "9000:9000"
     networks:
       - application
+    restart: unless-stopped
 
   backend:
     build:
@@ -39,6 +40,7 @@ services:
       - internal
     depends_on:
       - mongodb
+    restart: unless-stopped
 
   certbot:
     image: certbot/certbot
@@ -58,6 +60,7 @@ services:
       - ./dump:/data/db/dump
     networks:
       - internal
+    restart: unless-stopped
 
   matomo-db:
     image: mariadb:latest
@@ -65,16 +68,17 @@ services:
     volumes:
       - matomo-db-data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_ROOT_PASSWORD: matomo
       MYSQL_DATABASE: matomo
       MYSQL_USER: matomo
       MYSQL_PASSWORD: matomo
+    networks:
+      - internal
+    restart: unless-stopped
 
   matomo:
     image: matomo:latest
     container_name: matomo
-    ports:
-      - "8080:80"
     links:
       - matomo-db
     environment:
@@ -86,6 +90,10 @@ services:
       MATOMO_DATABASE_DBNAME: matomo
     volumes:
       - matomo-data:/var/www/html
+    networks:
+      - application
+      - internal
+    restart: unless-stopped
 
 volumes:
   certbot-conf:
