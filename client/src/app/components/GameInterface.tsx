@@ -260,6 +260,7 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
           startGame();
         }}>
           <h2 className="text-2xl font-bold mb-4">Wie ist dein Spielername?</h2>
+          Der Spielername erscheint am Ende des Quizzes auf der Bestenliste.
           <input
             className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
             placeholder="Dein Name"
