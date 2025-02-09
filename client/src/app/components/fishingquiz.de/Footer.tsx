@@ -13,7 +13,6 @@ export default function Footer() {
         <div className="flex space-x-4">
           <Link href="/impressum" className="hover:text-gray-300">Impressum</Link>
           <Link href="/datenschutz" className="hover:text-gray-300">Datenschutz</Link>
-          <Link href="/agb" className="hover:text-gray-300">AGB</Link>
         </div>
       </div>
     </footer>
