@@ -2,8 +2,8 @@
 
 import React, {useState, useCallback, useEffect} from 'react';
 import {useSocket} from '@/app/hooks/useSocket';
-import {Provider, useSelector} from 'react-redux';
-import {RootState, store} from '@/app/store';
+import {Provider} from 'react-redux';
+import {store} from '@/app/store';
 import GameInterface from '@/app/components/GameInterface';
 import Header from "@/app/components/fishingquiz.de/Header";
 import Footer from "@/app/components/fishingquiz.de/Footer";
@@ -13,7 +13,6 @@ export default function FishingQuizDe() {
   const socket = useSocket();
   const [gameState, setGameState] = useState<string>('start');
   const [roomId, setRoomId] = useState<string>('');
-  const authToken = useSelector((state: RootState) => state.user.authToken);
 
   useEffect(() => {
     // @ts-expect-error Matomo snippet code.
@@ -26,9 +25,9 @@ export default function FishingQuizDe() {
       _paq.push(['setTrackerUrl', u + 'matomo.php']);
       _paq.push(['setSiteId', '1']);
       const d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-      // @ts-expect-error Matomo snippet code.
       g.async = true;
       g.src = u + 'matomo.js';
+      // @ts-expect-error Matomo snippet code.
       s.parentNode.insertBefore(g, s);
     })();
   }, []);
