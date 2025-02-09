@@ -5,8 +5,6 @@ import {useSocket} from '@/app/hooks/useSocket';
 import {Provider, useSelector} from 'react-redux';
 import {RootState, store} from '@/app/store';
 import GameInterface from '@/app/components/GameInterface';
-import Head from "next/head";
-import LoginForm from "@/app/components/LoginForm";
 import Header from "@/app/components/fishingquiz.de/Header";
 import Footer from "@/app/components/fishingquiz.de/Footer";
 import CookieBanner from "@/app/components/CookieBanner";
@@ -16,7 +14,6 @@ export default function FishingQuizDe() {
   const [gameState, setGameState] = useState<string>('start');
   const [roomId, setRoomId] = useState<string>('');
   const authToken = useSelector((state: RootState) => state.user.authToken);
-  const isAuthenticated = authToken === 'authenticated';
 
   useEffect(() => {
     // @ts-expect-error Matomo snippet code.
