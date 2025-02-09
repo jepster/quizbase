@@ -194,15 +194,17 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
 
   return (
     <>
-      <Link href="/"
-            className="inline-flex items-center text-black font-bold pb-4 rounded">
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-             xmlns="http://www.w3.org/2000/svg">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-        </svg>
-        Zur Startseite
-      </Link>
+      {gameState !== gameStates.start && (
+        <Link href="/"
+              className="inline-flex items-center text-black font-bold pb-4 rounded">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+               xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Zur Startseite
+        </Link>
+      )}
       <ErrorModal isOpen={isErrorModalOpen} closeModal={() => setIsErrorModalOpen(false)} errorMessage={errorMessage} />
       <SuccessModal isOpen={isSuccessModalOpen} closeModal={() => setIsSuccessModalOpen(false)} successMessage={successMessage} />
       <HackerMode />
@@ -293,13 +295,8 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
           </div>
           <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r mt-5">
             <div className="flex items-center">
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                   xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
               <p>
-                <strong>Hinweis:</strong> Die Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht garantiert werden.
+                <strong>Hinweis:</strong> Diese Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht garantiert werden. Die meisten KI generierten Quizfragen erwiesen sich als hilfreich.
               </p>
             </div>
           </div>

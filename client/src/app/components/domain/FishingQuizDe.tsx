@@ -24,13 +24,15 @@ export default function FishingQuizDe() {
     /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
-    (function() {
-      const u="//fishingquiz.de/matomo/";
-      _paq.push(['setTrackerUrl', u+'matomo.php']);
+    (function () {
+      const u = "//fishingquiz.de/matomo/";
+      _paq.push(['setTrackerUrl', u + 'matomo.php']);
       _paq.push(['setSiteId', '1']);
-      const d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      const d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
       // @ts-expect-error Matomo snippet code.
-      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+      g.async = true;
+      g.src = u + 'matomo.js';
+      s.parentNode.insertBefore(g, s);
     })();
   }, []);
 
@@ -44,54 +46,41 @@ export default function FishingQuizDe() {
 
   return (
     <>
-      {!isAuthenticated ? (
-        <div className="h-screen flex justify-center">
-          <Head>
-            <title>QuizMaster: Fun Quizzes for Your Spare Time!</title>
-          </Head>
-          <div className="flex-col w-full max-w-4xl px-4 sm:px-6 lg:px-8">
-            <div className="bg-white w-full p-6 rounded-lg shadow-lg flex-grow mx-auto mt-10">
-              <LoginForm/>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <Provider store={store}>
-          <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Provider store={store}>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+          {gameState === 'start' && (
+            <Header/>
+          )}
+
+          {/* Categories Section */}
+          <div className="max-w-7xl mx-auto px-4 py-16 flex-grow">
             {gameState === 'start' && (
-              <Header/>
+              <>
+                <h2 className="text-3xl font-bold text-center">Quiz-Kategorien</h2>
+              </>
             )}
 
-            {/* Categories Section */}
-            <div className="max-w-7xl mx-auto px-4 py-16 flex-grow">
-              {gameState === 'start' && (
-                <>
-                  <h2 className="text-3xl font-bold text-center">Quiz-Kategorien</h2>
-                </>
-              )}
-
-              <div className="flex justify-center">
-                <div className="flex-col w-full max-w-4xl px-4 sm:px-6 lg:px-8">
-                  <div className="bg-white w-full p-6 rounded-lg shadow-lg flex-grow mx-auto mt-10">
-                    <GameInterface
-                      socket={socket}
-                      gameState={gameState}
-                      setGameState={setGameStateCallback}
-                      resetGame={resetGame}
-                      setRoomId={setRoomId}
-                      roomId={roomId}
-                    />
-                  </div>
+            <div className="flex justify-center">
+              <div className="flex-col w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+                <div className="bg-white w-full p-6 rounded-lg shadow-lg flex-grow mx-auto mt-10">
+                  <GameInterface
+                    socket={socket}
+                    gameState={gameState}
+                    setGameState={setGameStateCallback}
+                    resetGame={resetGame}
+                    setRoomId={setRoomId}
+                    roomId={roomId}
+                  />
                 </div>
               </div>
             </div>
-
-            <CookieBanner/>
-            <Footer/>
-
           </div>
-        </Provider>
-      )}
+
+          <CookieBanner/>
+          <Footer/>
+
+        </div>
+      </Provider>
     </>
   );
 }
