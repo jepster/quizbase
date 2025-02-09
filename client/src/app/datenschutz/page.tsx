@@ -4,6 +4,7 @@ import React from 'react';
 import Header from "@/app/components/fishingquiz.de/Header";
 import Footer from "@/app/components/fishingquiz.de/Footer";
 import CookieBanner from "@/app/components/CookieBanner";
+import Link from "next/link";
 
 export default function Page() {
   return (
@@ -12,6 +13,15 @@ export default function Page() {
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between">
           <div className="mb-4 md:mb-0">
+            <Link href="/"
+                  className="inline-flex items-center text-black font-bold pb-4 rounded">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              Zur Startseite
+            </Link>
             <h1 id="datenschutzerklärung" className="text-3xl font-semibold text-gray-900 mb-4">Datenschutzerklärung</h1>
             <p className="text-gray-700 leading-relaxed mb-4">Verantwortlicher im Sinne der Datenschutzgesetze, insbesondere der EU-Datenschutzgrundverordnung (DSGVO), ist:</p>
             <p className="text-gray-700 leading-relaxed mb-4">
