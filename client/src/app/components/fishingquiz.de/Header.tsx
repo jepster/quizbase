@@ -16,7 +16,7 @@ export default function Header() {
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Teste dein Angelwissen</h1>
           <p className="text-xl md:text-2xl mb-8">
             Fordere dich selbst heraus und erweitere dein Wissen rund ums Angeln mit unseren spannenden
-            Quizzes
+            Quizzes.
           </p>
         </div>
       </div>
