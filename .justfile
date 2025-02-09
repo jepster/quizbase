@@ -10,8 +10,8 @@ deploy:
     ssh -t root@104.248.132.247 "cd app && docker-compose down"
     ssh -t root@104.248.132.247 "cd app && docker-compose build frontend"
     ssh -t root@104.248.132.247 "cd app && docker-compose up -d"
-    ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
-    ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
+#    ssh -t root@104.248.132.247 "docker exec -it app_backend_1 node dist/cli.js delete-database-command"
+#    ssh -t root@104.248.132.247 "docker exec -it mongodb mongorestore --authenticationDatabase admin -u root -p example --db quizbase /data/db/dump/quizbase"
 
 deploy-with-dependencies:
     rsync -e "ssh -o StrictHostKeyChecking=no" -rltgoD --no-perms --no-owner --no-group --no-times --progress --delete -v --stats --progress ./ --exclude=.git --exclude=cypress-tests root@104.248.132.247:/root/app
