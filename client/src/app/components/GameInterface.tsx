@@ -293,14 +293,6 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
               </button>
             ))}
           </div>
-          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r mt-5">
-            <div className="flex items-center">
-              <p>
-                <strong>Hinweis:</strong> Diese Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht garantiert werden. Die meisten KI generierten Quizfragen erwiesen sich als hilfreich.
-              </p>
-            </div>
-          </div>
-
           {answerSubmitted && (
             <>
               <div
@@ -315,6 +307,13 @@ export default function GameInterface({ socket, gameState, setGameState }: GameI
               </button>
             </>
           )}
+          <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r mt-5">
+            <div className="flex items-center">
+              <p>
+                <strong>Hinweis:</strong> Diese Quizfrage wurde mit KI erzeugt. Die Korrektheit kann daher nicht garantiert werden. Die meisten KI generierten Quizfragen erwiesen sich als hilfreich.
+              </p>
+            </div>
+          </div>
         </>
       )}
 
