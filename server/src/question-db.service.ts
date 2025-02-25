@@ -1,6 +1,6 @@
-import { Collection, MongoClient } from 'mongodb';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {Collection, MongoClient} from 'mongodb';
+import {Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
 import Category from './types/category';
 
 interface Question {
@@ -49,16 +49,20 @@ export class QuestionDbService {
           {
             $group: {
               _id: {
-                machine: '$categoryMachineName',
-                human: '$categoryHumanReadable',
+                categoryMachine: '$categoryMachineName',
+                categoryHuman: '$categoryHumanReadable',
+                topicMachine: '$topicMachineName',
+                topicHuman: '$topicHumanReadable',
               },
             },
           },
           {
             $project: {
               _id: 0,
-              categoryMachineName: '$_id.machine',
-              categoryHumanReadable: '$_id.human',
+              categoryMachineName: '$_id.categoryMachine',
+              categoryHumanReadable: '$_id.categoryHuman',
+              topicMachineName: '$_id.topicMachine',
+              topicHumanReadable: '$_id.topicHuman',
             },
           },
         ])
@@ -73,6 +77,8 @@ export class QuestionDbService {
         .map((category) => ({
           machineName: category.categoryMachineName as string,
           humanReadableName: category.categoryHumanReadable as string,
+          topicMachineName: category.topicMachineName as string,
+          topicHumanReadable: category.topicHumanReadable as string,
         }));
     } catch (error) {
       console.error('Error fetching categories with machine names:', error);
@@ -104,6 +110,8 @@ export class QuestionDbService {
 
       if (category) {
         return {
+          topicHumanReadable: category.topicHumanReadable,
+          topicMachineName: category.topicMachineName,
           machineName: category.categoryMachineName,
           humanReadableName: category.categoryHumanReadable,
         };
@@ -145,8 +153,8 @@ export class QuestionDbService {
       const collection = await this.getMongoDbCollection();
       const questions = await collection
         .aggregate([
-          { $match: matchCriteria },
-          { $sample: { size: this.questionsNumberInGame } },
+          {$match: matchCriteria},
+          {$sample: {size: this.questionsNumberInGame}},
         ])
         .toArray();
 

@@ -10,6 +10,7 @@ import { Injectable } from '@nestjs/common';
 import { PerplexityService } from './perplexity.service';
 import { QuestionDbService } from './question-db.service';
 import Category from './types/category';
+import Topic from "./types/topic";
 
 interface Room {
   id: string;
@@ -184,9 +185,9 @@ export class SynchronousQuizGateway
   @SubscribeMessage('createCustomCategory')
   async createCustomCategory(
     client: Socket,
-    payload: { category: Category },
+    payload: { category: Category; topic: Topic },
   ): Promise<void> {
-    await this.perplexityService.run(payload.category.humanReadableName);
+    await this.perplexityService.run(payload.category.humanReadableName, payload.topic.humanReadableName);
     client.emit('categoryCreated', { category: payload.category });
   }
 

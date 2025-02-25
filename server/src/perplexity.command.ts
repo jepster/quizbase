@@ -1,5 +1,5 @@
-import { Command, CommandRunner, Option } from 'nest-commander';
-import { PerplexityService } from './perplexity.service';
+import {Command, CommandRunner, Option} from 'nest-commander';
+import {PerplexityService} from './perplexity.service';
 
 // Run this command like this: node dist/main.js perplexity-command
 @Command({
@@ -22,12 +22,24 @@ export class PerplexityCommand extends CommandRunner {
     return val;
   }
 
+  @Option({
+    flags: '-t, --topic [topic]',
+    description: 'The topic for the trivia questions',
+  })
+  parseTopic(val: string): string {
+    if (val === '') {
+      throw new Error('Invalid topic. You must enter a topic.');
+    }
+    return val;
+  }
+
   async run(
     passedParams: string[],
-    options?: { category: string; difficulty: string },
+    options?: { category: string; topic: string; difficulty: string },
   ): Promise<void> {
     const categoryHumanReadable = options.category;
+    const topicHumanReadable = options.topic;
 
-    await this.perplexityService.run(categoryHumanReadable);
+    await this.perplexityService.run(categoryHumanReadable, topicHumanReadable);
   }
 }

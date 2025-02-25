@@ -19,7 +19,7 @@ export class PerplexityService {
     this.mongoUri = this.configService.get('DATABASE_URL');
   }
 
-  async run(category: string): Promise<void> {
+  async run(category: string, topic: string): Promise<void> {
     await (async (category) => {
       const difficulties = ['high', 'low'];
       await Promise.all(
@@ -27,7 +27,7 @@ export class PerplexityService {
           await Promise.all(
             Array(5)
               .fill(null)
-              .map(() => this.createQuestionIteration(category, difficulty)),
+              .map(() => this.createQuestionIteration(category, difficulty, topic)),
           );
         }),
       );
@@ -37,14 +37,16 @@ export class PerplexityService {
   private async createQuestionIteration(
     categoryHumanReadable: string,
     difficulty: string,
+    topicHumanReadable: string,
   ) {
     const apiKey = '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';
     const client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai' });
 
     const categoryMachineName = this.generateMachineName(categoryHumanReadable);
+    const topicMachineName = this.generateMachineName(topicHumanReadable);
 
     const response = await client.chat.completions.create({
-      model: 'llama-3.1-sonar-small-128k-online',
+      model: 'sonar',
       messages: [
         {
           role: 'user',
@@ -72,6 +74,12 @@ export class PerplexityService {
             '",' +
             '"categoryMachineName: "' +
             categoryMachineName +
+            '",' +
+            '"topicHumanReadable: "' +
+            topicHumanReadable +
+            '",' +
+            '"topicMachineName: "' +
+            topicMachineName +
             '"',
         },
       ],
@@ -111,6 +119,8 @@ export class PerplexityService {
         'difficulty',
         'categoryHumanReadable',
         'categoryMachineName',
+        'topicHumanReadable',
+        'topicMachineName',
       ];
 
       for (const item of dataset) {

@@ -25,6 +25,7 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
   const [question, setQuestion] = useState<string>('');
   const [options, setOptions] = useState<string[]>([]);
   const [category, setCategory] = useState<Category | null>(null);
+  const [topic, setTopic] = useState<Category | null>(null);
   const [difficulty, setDifficulty] = useState<string>('');
   const [lastSubmittedAnswer, setLastSubmittedAnswer] = useState<number | null>(null);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
@@ -44,6 +45,23 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
   const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
   const isHackerMode = useHackerMode();
+
+  const [filterTopic, setFilterTopic] = useState<string>('');
+  const [topicOptions, setTopicOptions] = useState<string[]>([]);
+  useEffect(() => {
+    // Extract unique topicHumanReadable values from categories
+    if (categories) {
+      const uniqueTopics = [...new Set(categories.map(cat => cat.topicHumanReadable).filter(topic => topic))];
+      setTopicOptions(uniqueTopics);
+    }
+  }, [categories]);
+
+  const filteredCategories = useMemo(() => {
+    if (!filterTopic) {
+      return categories;
+    }
+    return categories.filter(category => category.topicHumanReadable === filterTopic);
+  }, [categories, filterTopic]);
 
   const gameStates = useMemo(() => ({
     start: 'start',
@@ -257,8 +275,12 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
       showError('Bitte gib einen Kategorienamen ein.');
       return;
     }
+    if (topic === null) {
+      showError('Bitte gib ein Themengebiet ein.');
+      return;
+    }
     setIsLoading(true);
-    socket?.emit('createCustomCategory', { category: category });
+    socket?.emit('createCustomCategory', { category: category, topic: topic });
   };
 
   const shareOnWhatsApp = () => {
@@ -331,7 +353,7 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
     socket?.emit('deleteCategory', category);
   };
 
-  const processCategoryName = (humanReadableName: string): Category => {
+  function createMachineName(humanReadableName: string) {
     const machineName = humanReadableName
       .toLowerCase()
       .normalize('NFD')
@@ -340,7 +362,15 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
       .replace(/^-+|-+$/g, '')
       .replace(/-+/g, '-');
 
-    return { humanReadableName, machineName };
+    return {humanReadableName, machineName};
+  }
+
+  const processCategoryName = (humanReadableName: string): Category => {
+    return createMachineName(humanReadableName);
+  };
+
+  const processTopicName = (humanReadableName: string): Category => {
+    return createMachineName(humanReadableName);
   };
 
   return (
@@ -362,27 +392,42 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
           <button className="bg-pink-500 hover:bg-pink-700 text-white font-bold my-5 py-2 px-4 rounded m-2"
                   onClick={() => setGameState(gameStates.categoryCreation)}>Kategorie erstellen
           </button>
-          {
-            categories.length > 0 && (
-              <>
-                <h2 className="text-2xl font-bold text-gray-800">Asynchrone Spiele</h2>
-                {categories.map((category, index) => (
-                  <React.Fragment key={index}>
-                    {!isHackerMode ? (
-                      <button
-                        onClick={() => handleAsyncCategorySelect(category)}
-                        className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
-                      >
-                        {category.humanReadableName}
-                      </button>
-                    ) : (
-                      <DeleteButton onDelete={() => handleDelete(category)} category={category}/>
-                    )}
-                  </React.Fragment>
-                ))}
-              </>
-            )
-          }
+          <div>
+            <label htmlFor="topicFilter" className="mr-2">Themengebiet Filter:</label>
+            <select
+              id="topicFilter"
+              className="p-2 border-2 border-gray-300 rounded"
+              value={filterTopic}
+              onChange={(e) => setFilterTopic(e.target.value)}
+            >
+              <option value="">Alle Themen</option>
+              {topicOptions.map((topic, index) => (
+                <option key={index} value={topic}>{topic}</option>
+              ))}
+            </select>
+          </div>
+
+          {filteredCategories.map((category, index) => (
+            <React.Fragment key={index}>
+              {!isHackerMode ? (
+                <div className="relative">
+                  <button
+                    onClick={() => handleAsyncCategorySelect(category)}
+                    className="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded m-2"
+                  >
+                    {category.humanReadableName}
+                  </button>
+                  {category.topicHumanReadable && (
+                    <span className="absolute top-0 right-0 bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
+                            {category.topicHumanReadable}
+                          </span>
+                  )}
+                </div>
+              ) : (
+                <DeleteButton onDelete={() => handleDelete(category)} category={category} />
+              )}
+            </React.Fragment>
+          ))}
         </>
       )}
 
@@ -580,6 +625,15 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
             onChange={(e) => {
               const processedCategory = processCategoryName(e.target.value);
               setCategory(processedCategory);
+            }}
+          />
+          <input
+            className="w-full p-2 mt-2 mb-2 border-2 border-pink-500 rounded"
+            placeholder="Themengebiet"
+            value={topic?.humanReadableName || ''}
+            onChange={(e) => {
+              const processedTopic = processTopicName(e.target.value);
+              setTopic(processedTopic);
             }}
           />
           <button
