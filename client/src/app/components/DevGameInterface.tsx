@@ -49,9 +49,11 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
   const [filterTopic, setFilterTopic] = useState<string>('');
   const [topicOptions, setTopicOptions] = useState<string[]>([]);
   useEffect(() => {
-    // Extract unique topicHumanReadable values from categories
     if (categories) {
-      const uniqueTopics = [...new Set(categories.map(cat => cat.topicHumanReadable).filter(topic => topic))];
+      const uniqueTopics = [...new Set(categories
+          .map(cat => cat.topicReadableName)
+          .filter((topic): topic is string => topic !== null && topic !== undefined)
+      )];
       setTopicOptions(uniqueTopics);
     }
   }, [categories]);
@@ -60,7 +62,7 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
     if (!filterTopic) {
       return categories;
     }
-    return categories.filter(category => category.topicHumanReadable === filterTopic);
+    return categories.filter(category => category.topicReadableName === filterTopic);
   }, [categories, filterTopic]);
 
   const gameStates = useMemo(() => ({
@@ -353,16 +355,21 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
     socket?.emit('deleteCategory', category);
   };
 
-  function createMachineName(humanReadableName: string) {
+  function createMachineName(humanReadableName: string): Category {
     const machineName = humanReadableName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/-+/g, '-');
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-');
 
-    return {humanReadableName, machineName};
+    return {
+      humanReadableName,
+      machineName,
+      topicReadableName: '',
+      topicName: '',
+    };
   }
 
   const processCategoryName = (humanReadableName: string): Category => {
@@ -417,9 +424,9 @@ export default function DevGameInterface({ socket, gameState, setGameState, setR
                   >
                     {category.humanReadableName}
                   </button>
-                  {category.topicHumanReadable && (
+                  {category.topicReadableName && (
                     <span className="absolute top-0 right-0 bg-gray-300 text-gray-700 rounded-full px-2 py-1 text-xs">
-                            {category.topicHumanReadable}
+                            {category.topicReadableName}
                           </span>
                   )}
                 </div>
