@@ -45,8 +45,8 @@ mongodb-container-up:
 mongodb-container-down:
     docker compose -p {{PROJECT_NAME}} -f ./docker-compose.dev.yml down --volumes --remove-orphans
 
-mongodb-import-questions category:
-    cd server && npm run build && node dist/cli.js perplexity-command --category "{{category}}"
+mongodb-import-questions category topic:
+    cd server && npm run build && node dist/cli.js perplexity-command --category "{{category}}" --topic "{{topic}}"
 
 mongodb-delete-database:
     cd server && npm run build && node dist/cli.js delete-database-command
