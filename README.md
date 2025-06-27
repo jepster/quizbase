@@ -1,5 +1,10 @@
 # Quizbase
 
+## Setup
+Open the following code method and set the Perplexity AI key: `PerplexityService.createQuestionIteration`
+
+Yes, there should be a `.env` file for this. :)
+
 ## Local usage and live deployment
 It's meant to run the local app via npm.
 
@@ -14,7 +19,7 @@ Deploy them and run `docker-compose up` on the digitalocean server. Afterwards w
 in the docker-compose setup. Then revert the docker-compose and nginx config file and redeploy.
 
 ## Commands
-The nest.js commands can be run like this:
+The nest.js commands can be run like this with the [just](https://github.com/casey/just) command runner:
 ```
-npm run build && node dist/cli.js perplexity-command --category="Ukrainekrieg"
+just mongodb-import-questions "AI" "What is the best AI tool?"
 ```
