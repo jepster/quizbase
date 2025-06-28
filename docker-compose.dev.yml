@@ -11,7 +11,12 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./dump:/data/db/dump
-    network_mode: host
+    networks:
+      - local-dev
 
 volumes:
   mongodb_data:
+
+networks:
+  local-dev:
+    driver: bridge

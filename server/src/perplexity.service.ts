@@ -39,7 +39,7 @@ export class PerplexityService {
     difficulty: string,
     topicHumanReadable: string,
   ) {
-    const apiKey = 'YOU-API-KEY';
+    const apiKey = this.configService.get<string>('PERPLEXITY_API_KEY');
     const client = new OpenAI({ apiKey, baseURL: 'https://api.perplexity.ai' });
 
     const categoryMachineName = this.generateMachineName(categoryHumanReadable);
