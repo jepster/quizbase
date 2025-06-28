@@ -35,3 +35,6 @@ It's recommended to use [Compass](https://www.mongodb.com/products/tools/compass
 ```
 mongodb://root:example@localhost:27017
 ```
+
+## Architecture
+![Database](img/Quizbase.drawio.png)
